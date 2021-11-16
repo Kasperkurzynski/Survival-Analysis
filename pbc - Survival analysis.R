@@ -96,5 +96,7 @@ SumKM
 PlotKM <- plot(km)
 
 #github test
+ggplot(dane, aes(x=sex, y=albumin, fill=sex)) + geom_boxplot()
+mean(dane$age)
 
                
