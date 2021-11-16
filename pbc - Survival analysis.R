@@ -95,5 +95,6 @@ SumKM <- summary(km)
 SumKM
 PlotKM <- plot(km)
 
+#github test
 
                
