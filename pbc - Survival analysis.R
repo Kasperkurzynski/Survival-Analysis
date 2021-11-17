@@ -99,4 +99,5 @@ PlotKM <- plot(km)
 ggplot(dane, aes(x=sex, y=albumin, fill=sex)) + geom_boxplot()
 mean(dane$age)
 
-               
+#github test - Tomek
+print('Czesc :-)')
