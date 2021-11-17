@@ -103,3 +103,5 @@ mean(dane$age)
 print('Czesc :-)')
 
 #Kinga
+
+#Teraz zrób "pull"
