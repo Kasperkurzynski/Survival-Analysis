@@ -101,3 +101,5 @@ mean(dane$age)
 
 #github test - Tomek
 print('Czesc :-)')
+
+#Kinga
