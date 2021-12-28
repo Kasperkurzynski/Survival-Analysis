@@ -4,6 +4,9 @@ library(dplyr)
 library(ggplot2)
 library(corrplot)
 library(gridExtra)
+library(extrafont)
+library(mice)
+
 
 #pbcseq
 #https://cran.r-project.org/web/packages/survival/survival.pdf
@@ -13,15 +16,58 @@ data(pbc)
 #Liczba "1" w zmiennej status wynosi 147. Należy uznać te obserwacje jako cenzurowane. 
 table(pbcseq$status)
 
-dane <- pbcseq
+dane <- pbc
+dane <- dane[1:312,]
 summary(dane)
-#Zmienna "chol" zawiera najwięcej braków danych (821). 
-#Dla tej zmiennej zostanie przeprowadzona imputacja metodą imputacja średnią.
-#Pozostałe zmienne zawierają między 60-80 braków danych. Obserwacje te zostaną usunięte. 
+
+NA_count <- colSums(is.na(dane))
+NA_count
+barplot(NA_count)
+NA_obs <- dane[!complete.cases(dane),]
+which(!complete.cases(dane))
+
+# KNN_dia <- kNN(KNN_dane, variable = c("price","depth", "x"), k = 5)
+daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
+daneKNN
+
+daneKNN$chol_imp <- NULL
+daneKNN$trig_imp <- NULL
+daneKNN$copper_imp <- NULL
+daneKNN$platelet_imp <- NULL
+
+summary(dane)
+summary(daneKNN)
+cor.test(dane$age, dane$chol, use="complete.obs")
+
+regresja <- lm(chol ~ sex + age + sex * age, data = dane)
+summary(regresja)
+
+ 
+# I rozwiązanie
+#Imputacja metodą mediany / średniej zmiennej "chol" i "trig", a reszty zmiennych metodą KNN.
+
+# II rozwiązanie
+#Imputacja zostanie przeprowadzona metodą KNN w przypadku wzięcia pod uwagę tylko 312 obserwacji.
+
+# III rozwiązanie
+#Imputacja metodą regresji przy wykorzystaniu interakcji (sex*age).
 
 dane$chol[is.na(dane$chol)] <- mean(dane$chol, na.rm = TRUE)
-dane <- na.omit(dane)
 table(dane$status)
+
+levels(daneKNN$sex) <- c(1,0)
+daneKNN$status <- as.factor(daneKNN$status)
+daneKNN$trt <- as.factor(daneKNN$trt)
+daneKNN$ascites <- as.factor(daneKNN$ascites)
+daneKNN$spiders <- as.factor(daneKNN$spiders)
+daneKNN$hepato <- as.factor(daneKNN$hepato)
+daneKNN$stage <- as.factor(daneKNN$stage)
+daneKNN$edema <- as.factor(daneKNN$edema)
+str(daneKNN)
+summary(daneKNN)
+
+
+daneKNN$cens <- ifelse(daneKNN$status=="0" | daneKNN$status=="1",0,1)
 
 pbcChol <- ggplot(pbcseq, aes(x=chol)) + geom_histogram(binwidth = 50, fill="firebrick2") + labs(title = "Przed imputacją")
 impChol <- ggplot(dane, aes(x=chol)) + geom_histogram(binwidth = 50, fill="gold2") + labs(title = "Po imputacji")
@@ -40,11 +86,13 @@ dane$edema <- as.factor(dane$edema)
 str(dane)
 summary(dane)
 
+daneKNN$age <- round(daneKNN$age,0)
+
 
 dane$cens <- ifelse(dane$status=="0" | dane$status=="1",0,1)
 dane$cens <- as.factor(dane$cens)
 
-dane %>%
+daneKNN %>%
   group_by(sex) %>%
   summarise(N = n(), Mean = mean(age), Min = min(age), Max = max(age), Sd = sd(age))
 
@@ -54,7 +102,7 @@ dane %>%
 
 dane %>%
   group_by(sex) %>%
-  summarise(N = n(), Mean = mean(chol, na.rm = T), Min = min(chol, na.rm = T), Max = max(chol, na.rm = T), Sd = sd(chol, na.rm = T))
+  summarise(N = n(), Mean = mean(chol, na.rm = T), Median = median(chol, na.rm = T), Min = min(chol, na.rm = T), Max = max(chol, na.rm = T), Sd = sd(chol, na.rm = T))
 
 dane %>%
   group_by(sex) %>%
@@ -68,7 +116,7 @@ dane %>%
   group_by(stage) %>%
   summarise(N = n(), Mean = mean(chol), Min = min(chol), Max = max(chol), Sd = sd(chol))
 
-ggplot(dane, aes(x=stage, fill=stage)) + geom_bar()
+ggplot(daneKNN, aes(x=stage, fill=stage)) + geom_bar()
 ggplot(dane, aes(x=sex, fill=sex)) + geom_bar()
 ggplot(dane, aes(x=stage, y = age, fill=stage)) + geom_boxplot()
 ggplot(dane, aes(x=stage, y=bili, fill=stage)) + geom_boxplot()
@@ -95,13 +143,28 @@ SumKM <- summary(km)
 SumKM
 PlotKM <- plot(km)
 
-#github test
-ggplot(dane, aes(x=sex, y=albumin, fill=sex)) + geom_boxplot()
-mean(dane$age)
+#Właściwa analiza histori zdarzeń
+Surv(daneKNN$time, daneKNN$cens)
+pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)
+summary(pbcKM)
+plot(pbcKM)
 
-#github test - Tomek
-print('Czesc :-)')
+#Wykresy dla grup
+pbcSex = survfit(Surv(time, cens) ~ sex, conf.type="plain", data=daneKNN)
+summary(pbcSex)
+plot(pbcSex, col=c("red","green"))
 
-#Kinga
+pbcHepato = survfit(Surv(time, cens) ~ hepato, conf.type="plain", data=daneKNN)
+summary(pbcHepato)
+plot(pbcHepato, col=c("red","green"))
+legend(50,0.3,c("Enlarged liver","Normal liver"),lty=1, col=c("green","red"),bty="n")
 
-#Teraz zrób "pull"
+pbcTrt = survfit(Surv(time, cens) ~ trt, conf.type="plain", data=daneKNN)
+summary(pbcTrt)
+plot(pbcTrt, col=c("red","green"))
+
+# skumulowanego hazardu
+plot(pbcKM, fun="cumhaz",xlab="Czas", ylab="Skumulowany hazard")
+lines(Nels2, fun="cumhaz",col="red")
+
+
