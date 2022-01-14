@@ -146,8 +146,12 @@ PlotKM <- plot(km)
 #Właściwa analiza histori zdarzeń
 Surv(daneKNN$time, daneKNN$cens)
 pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)
+pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log-log", data=daneKNN)
+pbcKM2 <- survfit(Surv(time, cens) ~ 1, conf.type="plain", data=daneKNN)
 summary(pbcKM)
 plot(pbcKM)
+lines(pbcKM1, col="red")
+lines(pbcKM2, col="red")
 
 #Wykresy dla grup
 pbcSex = survfit(Surv(time, cens) ~ sex, conf.type="plain", data=daneKNN)
@@ -163,8 +167,20 @@ pbcTrt = survfit(Surv(time, cens) ~ trt, conf.type="plain", data=daneKNN)
 summary(pbcTrt)
 plot(pbcTrt, col=c("red","green"))
 
+#Nelson - Aelen
+pbcNELS=survfit(Surv(time,cens) ~ 1, conf.type ="plain", type="fleming-harrington",data=daneKNN)
+
 # skumulowanego hazardu
 plot(pbcKM, fun="cumhaz",xlab="Czas", ylab="Skumulowany hazard")
-lines(Nels2, fun="cumhaz",col="red")
+lines(pbcNELS, fun="cumhaz",col="red")
+
+s1=daneKNN[sample(nrow(daneKNN),size=60, replace=FALSE),] #mała próba
+pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN) #estymator KM
+pbcNelsSample <- survfit(Surv(time,cens) ~ 1, conf.type ="log-log", type="fleming-harrington",data=s1) # estymator NA dla małej próby
+pbcNels <- survfit(Surv(time,cens) ~ 1, conf.type ="log-log", type="fleming-harrington",data=daneKNN) # estymator NA
+summary(pbcNels) #podsumowanie N-A
+plot(pbcKM) #wykres KM
+lines(pbcNels, col="red") #wykres KM + N-A
+lines(pbcNelsSample, col="blue") #wykres KM + N-A + N-A dla malej próbki
 
 
