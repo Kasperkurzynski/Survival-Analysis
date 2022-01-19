@@ -6,6 +6,7 @@ library(corrplot)
 library(gridExtra)
 library(extrafont)
 library(mice)
+library(VIM)
 
 #testujemy Gita 
 
@@ -184,5 +185,63 @@ summary(pbcNels) #podsumowanie N-A
 plot(pbcKM) #wykres KM
 lines(pbcNels, col="red") #wykres KM + N-A
 lines(pbcNelsSample, col="blue") #wykres KM + N-A + N-A dla malej próbki
+
+
+#### model PH Coxa ####
+# Zbuduj model PH Coxa. Uwzględnij następujące zagadnienia:
+  # interpretacja uzyskanych oszacowań parametrów modelu
+  # weryfikacja założeń modelu (proporcjonalność hazardów)
+  # wybór postaci funkcji zmiennych objaśniających
+  # selekcja zmiennych do modelu
+  # reszty w modelu
+  # wybór najlepszego modelu
+  # ocena dopasowania modelu
+
+# estymacja modelu
+Cox <- coxph(Surv(time,cens)~trt+age+sex+ascites+hepato+spiders+bili+chol+albumin+copper+alk.phos+ast+trig+platelet+protime, data = daneKNN)
+summary(Cox)
+#globalny test Walda (p=<2e-16) wskazuje, ze przynajmniej 1 zmienna objasniajaca w modelu statystycznie rozni sie od 0, czyli jest istotna
+#zmienne: trt,sex,ascites,spiders,chol,alk.phos,ast,trig,platelet nie sa statystycznie rozne od 0, bo p-value <0,05
+
+# estymacja modelu metoda krokowa 
+library(MASS)
+stepAIC(Cox,direction="backward") #poszukuje modelu ktory bedzie optymalizowal model ze wzgledu na kryterium akaike AIC (tu - metoda wsteczna)
+#w wyniku tej procedury otrzymano model z 7 zmiennymi objasniajacymi: age,hepato,bili,albumin,copper,ast,protime
+#wg kryterium AIC zmienna ast mimo p-value <0,06 powinna znalezc sie w modelu
+#wszystkie te zmienne na poziomie istotnosci 0,05 sa statystycznie rozne od 0 (czyli istotne), bo p-value >0,05
+
+#otrzymany model
+Cox1 <- coxph(Surv(time,cens)~age+hepato+bili+albumin+copper+ast+protime, data = daneKNN)
+summary(Cox1)
+
+# INTERPRETACJA PARAMETROW: 
+#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 3,3% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard o 66,2% wyzszy niz pacjenci z hepato = 0 ceteris paribus
+#wraz ze wzrostem bili o 1, hazard (ryzyko) zgonu rosnie o 8,9% ceteris paribus
+#wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
+#wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,3% ceteris paribus
+#wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o 0,4% ceteris paribus
+#wraz ze wzrostem protime o 1, hazard (ryzyko) zgonu rosnie o 38,0% ceteris paribus
+
+# WERYFIKACJA ZALOZENIA PROPORCJONALNOSCI
+Prop <- cox.zph(Cox1, transform = 'km') #Kaplana-Meiera
+print(Prop)
+plot(Prop)
+#jezeli p > 0,05 to zostaly spelnione zalozenia proporcjalosci
+#- dla zmiennych: bili,protime nie zostaly spelnione (wyrzucic je z modelu?)
+Cox2 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN)
+summary(Cox2)
+
+# graficzna weryfikacja zalozenia proporcjonalnosci
+reszty <- resid(Cox1, type="scaledsch") 
+Time <- as.numeric(rownames(reszty))
+zmienne <- names(daneKNN[,c(5,8,11,13,14,16,19)])
+
+par(mfrow = c(3,3))
+for (i in 1:7) {
+  plot(log(Time), reszty[,i], xlab="ln(Czas)", main=zmienne[i],
+       ylab="Skalowane reszty Schoenfelda", pch=20, cex=0.7)
+  lines(smooth.spline(log(Time), reszty[,i] ), lwd=3 )
+}
 
 
