@@ -8,6 +8,7 @@ library(extrafont)
 library(mice)
 library(VIM)
 
+#testujemy Gita 
 
 #pbcseq
 #https://cran.r-project.org/web/packages/survival/survival.pdf
@@ -28,6 +29,7 @@ NA_obs <- dane[!complete.cases(dane),]
 which(!complete.cases(dane))
 
 # KNN_dia <- kNN(KNN_dane, variable = c("price","depth", "x"), k = 5)
+?kNN()
 daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
 daneKNN
 
