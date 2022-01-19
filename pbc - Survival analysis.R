@@ -214,7 +214,7 @@ summary(Cox1)
 
 # INTERPRETACJA PARAMETROW: 
 #jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 3,3% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
-#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard o 66,2% wyzszy niz pacjenci z hepato = 0 ceteris paribus
+#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 66,2% wyzszy niz pacjenci z hepato = 0 ceteris paribus
 #wraz ze wzrostem bili o 1, hazard (ryzyko) zgonu rosnie o 8,9% ceteris paribus
 #wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
 #wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,3% ceteris paribus
@@ -242,4 +242,41 @@ for (i in 1:7) {
   lines(smooth.spline(log(Time), reszty[,i] ), lwd=3 )
 }
 
+# jednostki odstajace
+deviance <- residuals(Cox2,type="deviance")
+s <- Cox2$linear.predictors
+plot(s,deviance,xlab="Liniowy predyktor",ylab="Reszty odchylen",cex=0.5, pch=20)
+abline(h=c(3,-3),lty=3)
+daneKNN$deviance <- deviance
+c1 <- which(daneKNN$deviance< c(-3))
+#jest 1 jednostka odstajaca (reszty odchylen<-3)
+
+# jednostki wplywowe
+dfb <- residuals(Cox2,type="dfbeta")
+n <- dim(dfb)[1]
+obs.nr <- c(1:n)
+par(mfrow = c(2,3))
+for (j in 1:5) {
+  plot(obs.nr,dfb[,j],xlab="Numer jednostki",ylab="Przyrost oceny parametru",
+       main=zmienne[j])
+}
+
+a1 <- which(abs(dfb[,1])>(0.004)) #usunac te jednostki
+a2 <- which(abs(dfb[,2])>(0.06))
+a3 <- which(abs(dfb[,3])>(0.1))
+a4 <- which(abs(dfb[,4])>(0.0004))
+a5 <- which(abs(dfb[,5])>(0.001))
+
+c <- sort(unique(c(a1,a2,a3,a4,a5,c1)))
+daneKNN_1 <- daneKNN[-c,] #zredukowany zbior
+
+Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
+summary(Cox3)
+
+# INTERPRETACJA PARAMETROW: 
+#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 4,9% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 100,5% wyzszy niz pacjenci z hepato = 0 ceteris paribus
+#wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
+#wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
+#wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o 0,8% ceteris paribus
 
