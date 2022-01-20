@@ -359,3 +359,13 @@ summary(Cox3)
 #wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
 #wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
 #wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o 0,8% ceteris paribus
+
+# MIARY DOPASOWANIA
+r2_1 <- coxr2(Cox1) #model otrzymany metoda krokowa przed sprawdzeniem zalozen proporcjonalnosci
+r2_2 <- coxr2(Cox2) #model po odrzuceniu zmiennych niespelniajacych zalozen proporcjonalnosci
+r2_3 <- coxr2(Cox3) #model po odrzuceniu jednostek odstajacych i wplywowych (uznany za najlepszy)
+round(rbind(r2_1$rsq, r2_2$rsq, r2_3$rsq),2)
+
+#wskaznik Briera
+sbrier(Surv(daneKNN_1$time, daneKNN_1$cens), predict(Cox3), btime = 780) #btime moment do ktorego wskaznik jest liczony
+#DLACZEGO WYCHODZI WIEKSZY NIZ 1???? musi byc w przedziale 0-1
