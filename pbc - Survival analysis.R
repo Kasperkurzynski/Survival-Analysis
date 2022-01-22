@@ -1,4 +1,3 @@
-install.packages("Rcpp")
 library(survival)
 library(survminer)
 library(survMisc)
@@ -25,7 +24,6 @@ data(pbc)
 #Liczba "1" w zmiennej status wynosi 147. Należy uznać te obserwacje jako cenzurowane. 
 
 dane <- pbc
-dane <- dane[1:312,, drop=F]
 summary(dane)
 
 dane$cens <- ifelse(dane$status=="0" | dane$status=="1",0,1)
@@ -41,7 +39,7 @@ which(!complete.cases(dane))
 daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
 daneKNN
 
-daneKNN <- daneKNN[,1:21,drop = F]
+daneKNN <- daneKNN[1:312,1:21,drop = F]
 
 # I rozwiązanie
 #Imputacja metodą mediany / średniej zmiennej "chol" i "trig", a reszty zmiennych metodą KNN.
@@ -154,7 +152,7 @@ c2
 
 #Rozkłady zmiennych jakościowych
 
-e <- ggplot(data = daneKNN, aes(x=sex, fill = sex)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("dodgerblue3","plum4")) +
+e <- ggplot(data = daneKNN, aes(x=sex, fill = sex)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("navajowhite3","plum4")) +
   theme_minimal() +
   ggtitle('Number of patients by gender') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -388,24 +386,46 @@ plot(pbcKM)
 lines(pbcKM1, col="red")
 lines(pbcKM2, col="red")
 
-daneKNN <- as.data.frame(daneKNN)
-require(reshape2)
-daneKNN$id <- rownames(daneKNN) 
-melt(daneKNN)
-
 ggsurvplot(
-  fit = survfit(Surv(time, cens) ~ 1, data = dane), 
+  fit = survfit(Surv(time, cens) ~ 1, data = daneKNN), 
   xlab = "Days", 
   ylab = "Overall survival probability")
 
-ggsurvplot(survfit(Surv(time, cens) ~ sex, data = dane),
+ggsurvplot(survfit(Surv(time, cens) ~ sex, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
-           risk.table = TRUE, # Add risk table
-           risk.table.col = "strata", # Change risk table color by groups
-           linetype = "strata", # Change line type by groups
-           surv.median.line = "hv", # Specify median survival
-           ggtheme = theme_bw(), # Change ggplot2 theme
-           palette = c("red", "blue"))
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("navajowhite3","plum4"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ hepato, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("palegreen4", "indianred3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ edema, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("navajowhite3","plum4"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ stage, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("palegreen3", "skyblue3","salmon3","brown3"))
 
 #Wykresy dla grup
 pbcSex = survfit(Surv(time, cens) ~ sex, conf.type="plain", data=daneKNN)
