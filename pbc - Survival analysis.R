@@ -1,3 +1,4 @@
+install.packages("Rcpp")
 library(survival)
 library(survminer)
 library(survMisc)
@@ -14,6 +15,7 @@ library(mfp)
 library(splines)
 library(CoxR2)
 library(ipred)
+library(Rcpp)
 
 #pbcseq
 #https://cran.r-project.org/web/packages/survival/survival.pdf
@@ -40,7 +42,6 @@ daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
 daneKNN
 
 daneKNN <- daneKNN[,1:21,drop = F]
-daneKNN <- as.data.frame(daneKNN)
 
 # I rozwiązanie
 #Imputacja metodą mediany / średniej zmiennej "chol" i "trig", a reszty zmiennych metodą KNN.
@@ -393,9 +394,18 @@ daneKNN$id <- rownames(daneKNN)
 melt(daneKNN)
 
 ggsurvplot(
-  fit = survfit(Surv(time, cens) ~ 1, data = daneKNN), 
+  fit = survfit(Surv(time, cens) ~ 1, data = dane), 
   xlab = "Days", 
   ylab = "Overall survival probability")
+
+ggsurvplot(survfit(Surv(time, cens) ~ sex, data = dane),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE, # Add risk table
+           risk.table.col = "strata", # Change risk table color by groups
+           linetype = "strata", # Change line type by groups
+           surv.median.line = "hv", # Specify median survival
+           ggtheme = theme_bw(), # Change ggplot2 theme
+           palette = c("red", "blue"))
 
 #Wykresy dla grup
 pbcSex = survfit(Surv(time, cens) ~ sex, conf.type="plain", data=daneKNN)
