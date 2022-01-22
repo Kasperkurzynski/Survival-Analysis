@@ -1,12 +1,18 @@
 install.packages("survival")
+install.packages("survminer")
 library(survival)
+library(survminer)
+library(survMisc)
 library(dplyr)
+library(gtools)
 library(ggplot2)
 library(corrplot)
 library(gridExtra)
 library(extrafont)
 library(mice)
 library(VIM)
+library(extrafont)
+
 
 #testujemy Gita 
 
@@ -66,6 +72,7 @@ daneKNN$spiders <- as.factor(daneKNN$spiders)
 daneKNN$hepato <- as.factor(daneKNN$hepato)
 daneKNN$stage <- as.factor(daneKNN$stage)
 daneKNN$edema <- as.factor(daneKNN$edema)
+daneKNN$cens <- as.factor(daneKNN$cens)
 str(daneKNN)
 summary(daneKNN)
 
@@ -86,8 +93,8 @@ dane$spiders <- as.factor(dane$spiders)
 dane$hepato <- as.factor(dane$hepato)
 dane$stage <- as.factor(dane$stage)
 dane$edema <- as.factor(dane$edema)
-str(dane)
-summary(dane)
+str(daneKNN)
+summary(daneKNN)
 
 daneKNN$age <- round(daneKNN$age,0)
 
@@ -95,49 +102,316 @@ daneKNN$age <- round(daneKNN$age,0)
 dane$cens <- ifelse(dane$status=="0" | dane$status=="1",0,1)
 dane$cens <- as.factor(dane$cens)
 
+#Rozkłady zmiennych ilościowych
+
+a <- ggplot(data = daneKNN, aes(x = age)) + geom_histogram(alpha = 0.7, binwidth = 5, fill="darkorange") + theme_minimal() +
+  ggtitle('Age') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+        labs(y = "N")
+b <- ggplot(data = daneKNN, aes(x = bili)) + geom_histogram(alpha = 0.7, binwidth = 2, fill="mediumpurple3") + theme_minimal() +
+  ggtitle('Bilirunbin') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+c <- ggplot(data = daneKNN, aes(x = chol)) + geom_histogram(alpha = 0.7, binwidth = 50, fill="seagreen4") + theme_minimal() +
+  ggtitle('Cholesterol') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+d <- ggplot(data = daneKNN, aes(x = albumin)) + geom_histogram(alpha = 0.7, binwidth = 0.2, fill="dodgerblue3") + theme_minimal() +
+  ggtitle('Albumin') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+a1 <- ggplot(data = daneKNN, aes(x = copper)) + geom_histogram(alpha = 0.7, binwidth = 30, fill="indianred4") + theme_minimal() +
+  ggtitle('Copper') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+b1 <- ggplot(data = daneKNN, aes(x = alk.phos)) + geom_histogram(alpha = 0.7, binwidth = 400, fill="royalblue3") + theme_minimal() +
+  ggtitle('Alkaline phos.') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+c1 <- ggplot(data = daneKNN, aes(x = ast)) + geom_histogram(alpha = 0.7, binwidth = 20, fill="goldenrod2") + theme_minimal() +
+  ggtitle('Aspartate amino.') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+d1 <- ggplot(data = daneKNN, aes(x = trig)) + geom_histogram(alpha = 0.7, binwidth = 20, fill="cadetblue3") + theme_minimal() +
+  ggtitle('Triglycerides') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+a2 <- ggplot(data = daneKNN, aes(x = platelet)) + geom_histogram(alpha = 0.7, binwidth = 25, fill="orangered3") + theme_minimal() +
+  ggtitle('Platelet') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+b2 <- ggplot(data = daneKNN, aes(x = protime)) + geom_histogram(alpha = 0.7, binwidth = 0.5, fill="darkolivegreen4") + theme_minimal() +
+  ggtitle('Protime') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+c2 <- ggplot(data = daneKNN, aes(x = time, fill = cens)) + geom_histogram(alpha = 0.7, binwidth = 200) + facet_grid(~cens) + theme_minimal() +
+  ggtitle('Time for cens & event') + 
+  scale_fill_manual(values = c("coral3","slateblue3")) +
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+
+grid.arrange(a,b,c,d)
+grid.arrange(a1,b1,c1,d1)
+grid.arrange(a2,b2)
+c2
+
+
+#Rozkłady zmiennych jakościowych
+
+e <- ggplot(data = daneKNN, aes(x=sex, fill = sex)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("dodgerblue3","plum4")) +
+  theme_minimal() +
+  ggtitle('Number of patients by gender') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+f <- ggplot(data = daneKNN, aes(x=trt, fill = trt)) + geom_bar(alpha = 0.9) + scale_fill_manual(values = c("lightseagreen","cornsilk3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by treatment') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+g <- ggplot(data = daneKNN, aes(x=ascites, fill = ascites)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("darkseagreen4","coral3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by ascites presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+h <- ggplot(data = daneKNN, aes(x=hepato, fill = hepato)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("palegreen4", "indianred3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by hepato presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+e1 <- ggplot(data = daneKNN, aes(x=edema, fill = edema)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("springgreen3","tan3","tomato3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by edema presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+f1 <- ggplot(data = daneKNN, aes(x=stage, fill = stage)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by stage of disease') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+g1 <- ggplot(data = daneKNN, aes(x=cens, fill = cens)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("coral3","slateblue3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by cens or event') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+
+grid.arrange(e,f)
+grid.arrange(g,h)
+grid.arrange(e1,f1)
+g1
+
+#Rozkłady pokazujące niektóre zależności
+
+z <- ggplot(daneKNN, aes(x=stage, y = age, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
+  ggtitle("Age by stage") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Age")
+x <- ggplot(daneKNN, aes(x=stage, y = bili, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
+  ggtitle("Bilirunbin by stage") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Bilirunbin")
+z1 <- ggplot(daneKNN, aes(x=stage, y = time, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
+  ggtitle("Time by stage") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Time") + facet_grid(~cens)
+x1 <- ggplot(daneKNN, aes(x=ascites, y = bili, fill=ascites)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("darkseagreen4","coral3")) + theme_minimal() +
+  ggtitle("Bilirunbin by ascites presence") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Bilirunbin")
+
+x2 <- ggplot(daneKNN, aes(x=hepato, y = bili, fill=hepato)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen4", "indianred3")) + theme_minimal() +
+  ggtitle("Bilirunbin by hepato presence") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Bilirunbin")
+
+z2 <- ggplot(daneKNN, aes(x=hepato, y = copper, fill=hepato)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen4", "indianred3")) + theme_minimal() +
+  ggtitle("Copper by hepato presence") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Copper")
+
+grid.arrange(z,x)
+grid.arrange(z1,x1)
+grid.arrange(z2,x2)
+
+#Statystyki względem grup
+
 daneKNN %>%
   group_by(sex) %>%
   summarise(N = n(), Mean = mean(age), Min = min(age), Max = max(age), Sd = sd(age))
 
-dane %>%
-  group_by(sex) %>%
-  summarise(N = n(), Mean = mean(albumin), Min = min(albumin), Max = max(albumin), Sd = sd(trig))
+daneKNN %>%
+  group_by(edema) %>%
+  summarise(N = n(), Mean = mean(bili), Min = min(bili), Max = max(bili), Sd = sd(bili))
 
-dane %>%
-  group_by(sex) %>%
-  summarise(N = n(), Mean = mean(chol, na.rm = T), Median = median(chol, na.rm = T), Min = min(chol, na.rm = T), Max = max(chol, na.rm = T), Sd = sd(chol, na.rm = T))
-
-dane %>%
-  group_by(sex) %>%
-  summarise(N = n(), Mean = mean(alk.phos), Min = min(alk.phos), Max = max(alk.phos), Sd = sd(alk.phos))
-
-dane %>%
-  group_by(sex) %>%
-  summarise(N = n(), Mean = mean(protime), Min = min(protime), Max = max(protime), Sd = sd(protime))
-
-dane %>%
+daneKNN %>%
   group_by(stage) %>%
+  summarise(N = n(), Mean = mean(bili), Min = min(bili), Max = max(bili), Sd = sd(bili))
+
+daneKNN %>%
+  group_by(sex) %>%
   summarise(N = n(), Mean = mean(chol), Min = min(chol), Max = max(chol), Sd = sd(chol))
 
-ggplot(daneKNN, aes(x=stage, fill=stage)) + geom_bar()
-ggplot(dane, aes(x=sex, fill=sex)) + geom_bar()
-ggplot(dane, aes(x=stage, y = age, fill=stage)) + geom_boxplot()
-ggplot(dane, aes(x=stage, y=bili, fill=stage)) + geom_boxplot()
-ggplot(dane, aes(x=sex, y=chol, fill=sex)) + geom_boxplot()
-
-ggplot(dane, aes(x=age)) + geom_histogram(binwidth = 5, aes(fill=sex)) + facet_grid(dane$sex)
-
-ggplot(dane, aes(x=chol, y=albumin, color=sex)) + geom_point()
-ggplot(dane, aes(x=bili, y=ast, color=sex)) + geom_point()
-ggplot(dane, aes(x=alk.phos, y=chol, color=edema)) + geom_point(alpha=0.4)
-ggplot(dane, aes(x=bili, y=ast, color=hepato)) + geom_point()
-ggplot(dane, aes(x=age, y=chol, color=sex)) + geom_point() + geom_smooth()
 
 
+#Wykres korelacji
 
-doKor <- dane[,c(5, 12,13,14,15,16,17,18)]
+doKor <- daneKNN[,c(5, 12,13,14,15,16,17,18,19)]
 corMat <- cor(doKor)
-corMat
 corrplot(corMat,method="number", tl.col = 'black')
 
 Surv(dane$day,dane$cens)
