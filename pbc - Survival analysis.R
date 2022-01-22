@@ -10,7 +10,10 @@ library(extrafont)
 library(mice)
 library(VIM)
 library(extrafont)
-
+library(mfp)
+library(splines)
+library(CoxR2)
+library(ipred)
 
 #pbcseq
 #https://cran.r-project.org/web/packages/survival/survival.pdf
