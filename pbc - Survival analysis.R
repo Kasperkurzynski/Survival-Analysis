@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-install.packages("survival")
-install.packages("survminer")
-=======
->>>>>>> 879723ce7be54e8ddd437af710fb9538f0503255
 library(survival)
 library(survminer)
 library(survMisc)
@@ -23,10 +18,9 @@ library(extrafont)
 data(pbc)
 
 #Liczba "1" w zmiennej status wynosi 147. Należy uznać te obserwacje jako cenzurowane. 
-table(pbcseq$status)
 
 dane <- pbc
-dane <- dane[1:312,]
+dane <- dane[1:312,, drop=F]
 summary(dane)
 
 NA_count <- colSums(is.na(dane))
@@ -40,19 +34,9 @@ which(!complete.cases(dane))
 daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
 daneKNN
 
-daneKNN$chol_imp <- NULL
-daneKNN$trig_imp <- NULL
-daneKNN$copper_imp <- NULL
-daneKNN$platelet_imp <- NULL
+daneKNN <- daneKNN[,1:20,drop = F]
+daneKNN <- as.data.frame(daneKNN)
 
-summary(dane)
-summary(daneKNN)
-cor.test(dane$age, dane$chol, use="complete.obs")
-
-regresja <- lm(chol ~ sex + age + sex * age, data = dane)
-summary(regresja)
-
- 
 # I rozwiązanie
 #Imputacja metodą mediany / średniej zmiennej "chol" i "trig", a reszty zmiennych metodą KNN.
 
@@ -62,10 +46,8 @@ summary(regresja)
 # III rozwiązanie
 #Imputacja metodą regresji przy wykorzystaniu interakcji (sex*age).
 
-dane$chol[is.na(dane$chol)] <- mean(dane$chol, na.rm = TRUE)
-table(dane$status)
-
-levels(daneKNN$sex) <- c(1,0)
+daneKNN$age <- round(daneKNN$age,0)
+#levels(daneKNN$sex) <- c(1,0)
 daneKNN$status <- as.factor(daneKNN$status)
 daneKNN$trt <- as.factor(daneKNN$trt)
 daneKNN$ascites <- as.factor(daneKNN$ascites)
@@ -73,35 +55,11 @@ daneKNN$spiders <- as.factor(daneKNN$spiders)
 daneKNN$hepato <- as.factor(daneKNN$hepato)
 daneKNN$stage <- as.factor(daneKNN$stage)
 daneKNN$edema <- as.factor(daneKNN$edema)
+
+daneKNN$cens <- ifelse(daneKNN$status=="0" | daneKNN$status=="1",0,1)
 daneKNN$cens <- as.factor(daneKNN$cens)
 str(daneKNN)
 summary(daneKNN)
-
-
-daneKNN$cens <- ifelse(daneKNN$status=="0" | daneKNN$status=="1",0,1)
-
-pbcChol <- ggplot(pbcseq, aes(x=chol)) + geom_histogram(binwidth = 50, fill="firebrick2") + labs(title = "Przed imputacją")
-impChol <- ggplot(dane, aes(x=chol)) + geom_histogram(binwidth = 50, fill="gold2") + labs(title = "Po imputacji")
-grid.arrange(pbcChol, impChol)
-
-str(dane)
-#1 = male, 0 - female
-levels(dane$sex) <- c(1,0)
-dane$status <- as.factor(dane$status)
-dane$trt <- as.factor(dane$trt)
-dane$ascites <- as.factor(dane$ascites)
-dane$spiders <- as.factor(dane$spiders)
-dane$hepato <- as.factor(dane$hepato)
-dane$stage <- as.factor(dane$stage)
-dane$edema <- as.factor(dane$edema)
-str(daneKNN)
-summary(daneKNN)
-
-daneKNN$age <- round(daneKNN$age,0)
-
-
-dane$cens <- ifelse(dane$status=="0" | dane$status=="1",0,1)
-dane$cens <- as.factor(dane$cens)
 
 #Rozkłady zmiennych ilościowych
 
@@ -415,13 +373,8 @@ doKor <- daneKNN[,c(5, 12,13,14,15,16,17,18,19)]
 corMat <- cor(doKor)
 corrplot(corMat,method="number", tl.col = 'black')
 
-Surv(dane$day,dane$cens)
-km <- survfit(Surv(day, cens) ~ 1, conf.type="log", data=dane)
-SumKM <- summary(km)
-SumKM
-PlotKM <- plot(km)
-
 #Właściwa analiza histori zdarzeń
+
 Surv(daneKNN$time, daneKNN$cens)
 pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)
 pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log-log", data=daneKNN)
@@ -430,6 +383,21 @@ summary(pbcKM)
 plot(pbcKM)
 lines(pbcKM1, col="red")
 lines(pbcKM2, col="red")
+
+ggsurvplot(
+  fit = pbcKM, 
+  xlab = "Days", 
+  ylab = "Overall survival probability")
+
+ggsurvplot(pbcKM1,
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE, 
+           risk.table.col = "strata",
+           linetype = "strata", 
+           surv.median.line = "hv", 
+           ggtheme = theme_bw())
+
+print(pbcKM)
 
 #Wykresy dla grup
 pbcSex = survfit(Surv(time, cens) ~ sex, conf.type="plain", data=daneKNN)
