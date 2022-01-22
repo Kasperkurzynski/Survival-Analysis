@@ -26,6 +26,8 @@ dane <- pbc
 dane <- dane[1:312,, drop=F]
 summary(dane)
 
+dane$cens <- ifelse(dane$status=="0" | dane$status=="1",0,1)
+
 NA_count <- colSums(is.na(dane))
 NA_count
 barplot(NA_count)
@@ -37,7 +39,7 @@ which(!complete.cases(dane))
 daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
 daneKNN
 
-daneKNN <- daneKNN[,1:20,drop = F]
+daneKNN <- daneKNN[,1:21,drop = F]
 daneKNN <- as.data.frame(daneKNN)
 
 # I rozwiązanie
@@ -50,7 +52,7 @@ daneKNN <- as.data.frame(daneKNN)
 #Imputacja metodą regresji przy wykorzystaniu interakcji (sex*age).
 
 daneKNN$age <- round(daneKNN$age,0)
-#levels(daneKNN$sex) <- c(1,0)
+levels(daneKNN$sex) <- c(1,0)
 daneKNN$status <- as.factor(daneKNN$status)
 daneKNN$trt <- as.factor(daneKNN$trt)
 daneKNN$ascites <- as.factor(daneKNN$ascites)
@@ -58,8 +60,6 @@ daneKNN$spiders <- as.factor(daneKNN$spiders)
 daneKNN$hepato <- as.factor(daneKNN$hepato)
 daneKNN$stage <- as.factor(daneKNN$stage)
 daneKNN$edema <- as.factor(daneKNN$edema)
-
-daneKNN$cens <- ifelse(daneKNN$status=="0" | daneKNN$status=="1",0,1)
 daneKNN$cens <- as.factor(daneKNN$cens)
 str(daneKNN)
 summary(daneKNN)
@@ -387,20 +387,15 @@ plot(pbcKM)
 lines(pbcKM1, col="red")
 lines(pbcKM2, col="red")
 
+daneKNN <- as.data.frame(daneKNN)
+require(reshape2)
+daneKNN$id <- rownames(daneKNN) 
+melt(daneKNN)
+
 ggsurvplot(
-  fit = pbcKM, 
+  fit = survfit(Surv(time, cens) ~ 1, data = daneKNN), 
   xlab = "Days", 
   ylab = "Overall survival probability")
-
-ggsurvplot(pbcKM1,
-           pval = TRUE, conf.int = TRUE,
-           risk.table = TRUE, 
-           risk.table.col = "strata",
-           linetype = "strata", 
-           surv.median.line = "hv", 
-           ggtheme = theme_bw())
-
-print(pbcKM)
 
 #Wykresy dla grup
 pbcSex = survfit(Surv(time, cens) ~ sex, conf.type="plain", data=daneKNN)
