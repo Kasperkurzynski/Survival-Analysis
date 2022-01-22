@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 install.packages("survival")
 install.packages("survminer")
+=======
+>>>>>>> 879723ce7be54e8ddd437af710fb9538f0503255
 library(survival)
 library(survminer)
 library(survMisc)
@@ -13,8 +16,6 @@ library(mice)
 library(VIM)
 library(extrafont)
 
-
-#testujemy Gita 
 
 #pbcseq
 #https://cran.r-project.org/web/packages/survival/survival.pdf
@@ -490,7 +491,7 @@ summary(Cox1)
 
 # INTERPRETACJA PARAMETROW: 
 #jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 3,3% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
-#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard o 66,2% wyzszy niz pacjenci z hepato = 0 ceteris paribus
+#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 66,2% wyzszy niz pacjenci z hepato = 0 ceteris paribus
 #wraz ze wzrostem bili o 1, hazard (ryzyko) zgonu rosnie o 8,9% ceteris paribus
 #wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
 #wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,3% ceteris paribus
@@ -502,7 +503,7 @@ Prop <- cox.zph(Cox1, transform = 'km') #Kaplana-Meiera
 print(Prop)
 plot(Prop)
 #jezeli p > 0,05 to zostaly spelnione zalozenia proporcjalosci
-#- dla zmiennych: bili,protime nie zostaly spelnione (wyrzucic je z modelu?)
+#- dla zmiennych: bili,protime nie zostaly spelnione (wyrzucic je z modelu)
 Cox2 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN)
 summary(Cox2)
 
@@ -518,4 +519,131 @@ for (i in 1:7) {
   lines(smooth.spline(log(Time), reszty[,i] ), lwd=3 )
 }
 
+# jednostki odstajace
+deviance <- residuals(Cox2,type="deviance")
+s <- Cox2$linear.predictors
+plot(s,deviance,xlab="Liniowy predyktor",ylab="Reszty odchylen",cex=0.5, pch=20)
+abline(h=c(3,-3),lty=3)
+daneKNN$deviance <- deviance
+c1 <- which(daneKNN$deviance< c(-3))
+#jest 1 jednostka odstajaca (reszty odchylen<-3)
 
+# jednostki wplywowe
+dfb <- residuals(Cox2,type="dfbeta")
+n <- dim(dfb)[1]
+obs.nr <- c(1:n)
+par(mfrow = c(2,3))
+for (j in 1:5) {
+  plot(obs.nr,dfb[,j],xlab="Numer jednostki",ylab="Przyrost oceny parametru",
+       main=zmienne[j])
+}
+
+a1 <- which(abs(dfb[,1])>(0.004)) #usunac te jednostki
+a2 <- which(abs(dfb[,2])>(0.06))
+a3 <- which(abs(dfb[,3])>(0.1))
+a4 <- which(abs(dfb[,4])>(0.0004))
+a5 <- which(abs(dfb[,5])>(0.001))
+
+c <- sort(unique(c(a1,a2,a3,a4,a5,c1)))
+daneKNN_1 <- daneKNN[-c,] #zredukowany zbior
+
+Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
+summary(Cox3)
+library(MASS)
+stepAIC(Cox3,direction="backward")
+
+# INTERPRETACJA PARAMETROW: 
+#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 4,9% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 100,5% wyzszy niz pacjenci z hepato = 0 ceteris paribus
+#wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
+#wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
+#wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o 0,8% ceteris paribus
+
+# METODA RESZT MARTYNGALOWYCH - badamy czy wystepuje liniowosc
+#Jeżeli zmienna objaśniająca 𝑋 jest ilościowa, to wprowadzenie jej do modelu Coxa w 
+#jest równoważne przyjęciu założenia, że łączy ją związek liniowy z logarytmem hazardu
+zmn1 <- daneKNN_1$age
+lab1 <- "WIEK (lata)"
+reszty1 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn1, reszty1, xlab=lab1,ylab="Reszty martynga?owe",cex=0.6)
+lines(lowess(zmn1, reszty1,delta=1),lwd=2)
+#Jeżeli funkcja ta ma kształt zbliżony do liniowego to potwierdza to liniowość 
+#relacji między zmienną objaśniającą a logarytmem hazardu, w przeciwnym wypadku kształt 
+#funkcji może być wskazówką co do wyboru odpowiedniej metody transformacji zmiennej.
+#age - WYSTEPUJE LINIOWOSC
+
+zmn2 <- daneKNN_1$albumin
+lab2 <- "albumin"
+reszty2 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn2, reszty2, xlab=lab2,ylab="Reszty martynga?owe",cex=0.6)
+lines(lowess(zmn2, reszty2,delta=1),lwd=2)
+#albumin - WYSTEPUJE LINIOWOSC
+
+zmn3 <- daneKNN_1$copper
+lab3 <- "copper"
+reszty3 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn3, reszty3, xlab=lab3,ylab="Reszty martynga?owe",cex=0.6)
+lines(lowess(zmn3, reszty3,delta=1),lwd=2)
+#copper - NIE WYSTEPUJE LINIOWOSC
+
+zmn4 <- daneKNN_1$ast
+lab4 <- "ast"
+reszty4 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn4, reszty4, xlab=lab4,ylab="Reszty martynga?owe",cex=0.6)
+lines(lowess(zmn4, reszty4,delta=1),lwd=2)
+#ast - WYSTEPUJE LINIOWOSC
+
+#TRANSFORMACJA ZMIENNEJ copper
+#dychotomizacja
+Cox4 <- coxph(Surv(time, cens)~zmn3,data=daneKNN_1)
+A1 <- round(AIC(Cox3),2) #akaike z modelu coxa
+A1
+cutpoint <- cutp(Cox4)$zmn3 ## optymalny punkt odciecia
+c <- (zmn3>=cutpoint$zmn3[1])*1+0 #jezeli zmienna jest >= punkotwi odciecia to przypisuje 1 w przeciwnym wypadku 0
+
+Cox5 <- coxph(Surv(time, cens)~c,data=daneKNN_1)
+A2 <- round(AIC(Cox5),2)
+A2
+# teraz jest gorzej bo Akaike jest duzo wyzszy niz przed dychotomizacja
+
+#wielomiany ulamkowe
+m3 <- mfp(Surv(time,cens)~ fp(zmn3, df = 4, select = 0.05),family=cox, data=daneKNN_1) ## wielomiany ulamkowe
+m3
+A3 <- round(AIC(m3))
+A3
+
+#metoda wielomianowej funkcji sklejanej (splajn)
+int <- quantile(na.omit(zmn3),probs=c(0.05,0.275,.5,.725,.95))
+Cox6 <- coxph(Surv(time,cens)~ns(zmn3,knots=int),data=daneKNN_1)
+pred <- predict(Cox6,type="terms",se.fit=TRUE, terms=1)
+plot(na.omit(zmn3),exp(pred$fit),type="n",xlab=lab3,ylim=c(0,2.5),
+     ylab="Hazard wzgl?dny")
+lines(smooth.spline(na.omit(zmn3),exp(pred$fit+1.96*pred$se.fit)),lty=2)
+lines(smooth.spline(na.omit(zmn3),exp(pred$fit-1.96*pred$se.fit)),lty=2)
+lines(smooth.spline(na.omit(zmn3),exp(pred$fit)),lty=1)
+abline(h=1,lty=3)
+legend('topright',2,c("splajn","95% przedzial ufnosci"), lty=1:2, box.lty=0)
+A4 <- round(AIC(Cox6),2)
+A4
+
+#PODSUMOWANIE TRANSFORMACJI ZMIENNEJ copper
+rbind(A1,A2,A3,A4)
+#mimo wszystko najlepszym modelem jest model bez transformacji zmiennej copper, czyli:
+Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
+summary(Cox3)
+# INTERPRETACJA PARAMETROW: 
+#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 4,9% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+#pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 100,5% wyzszy niz pacjenci z hepato = 0 ceteris paribus
+#wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
+#wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
+#wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o 0,8% ceteris paribus
+
+# MIARY DOPASOWANIA
+r2_1 <- coxr2(Cox1) #model otrzymany metoda krokowa przed sprawdzeniem zalozen proporcjonalnosci
+r2_2 <- coxr2(Cox2) #model po odrzuceniu zmiennych niespelniajacych zalozen proporcjonalnosci
+r2_3 <- coxr2(Cox3) #model po odrzuceniu jednostek odstajacych i wplywowych (uznany za najlepszy)
+round(rbind(r2_1$rsq, r2_2$rsq, r2_3$rsq),2)
+
+#wskaznik Briera
+sbrier(Surv(daneKNN_1$time, daneKNN_1$cens), predict(Cox3), btime = 780) #btime moment do ktorego wskaznik jest liczony
+#DLACZEGO WYCHODZI WIEKSZY NIZ 1???? musi byc w przedziale 0-1
