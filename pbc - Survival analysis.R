@@ -27,6 +27,7 @@ dane <- pbc
 summary(dane)
 
 dane$cens <- ifelse(dane$status=="0" | dane$status=="1",0,1)
+dane <- dane[1:312,]
 
 NA_count <- colSums(is.na(dane))
 NA_count
@@ -59,11 +60,12 @@ daneKNN$spiders <- as.factor(daneKNN$spiders)
 daneKNN$hepato <- as.factor(daneKNN$hepato)
 daneKNN$stage <- as.factor(daneKNN$stage)
 daneKNN$edema <- as.factor(daneKNN$edema)
-daneKNN$cens <- as.factor(daneKNN$cens)
 str(daneKNN)
 summary(daneKNN)
 
 #Rozkłady zmiennych ilościowych
+
+daneKNN$cens <- as.factor(daneKNN$cens)
 
 a <- ggplot(data = daneKNN, aes(x = age)) + geom_histogram(alpha = 0.7, binwidth = 5, fill="darkorange") + theme_minimal() +
   ggtitle('Age') + 
@@ -236,7 +238,23 @@ f1 <- ggplot(data = daneKNN, aes(x=stage, fill = stage)) + geom_bar(alpha = 0.8)
                                          colour ="gray26"),
         plot.title = element_text(color="gray26", size=19, family="serif")) + 
   labs(y = "N")
-g1 <- ggplot(data = daneKNN, aes(x=cens, fill = cens)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("coral3","slateblue3")) +
+
+g1 <- ggplot(data = daneKNN, aes(x=spiders, fill = spiders)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("forestgreen", "chocolate3")) +
+  theme_minimal() +
+  ggtitle('Number of patients spiders presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif")) + 
+  labs(y = "N")
+
+h1 <- ggplot(data = daneKNN, aes(x=cens, fill = cens)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("coral3","slateblue3")) +
   theme_minimal() +
   ggtitle('Number of patients by cens or event') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -254,7 +272,7 @@ g1 <- ggplot(data = daneKNN, aes(x=cens, fill = cens)) + geom_bar(alpha = 0.8) +
 grid.arrange(e,f)
 grid.arrange(g,h)
 grid.arrange(e1,f1)
-g1
+grid.arrange(g1,h1)
 
 #Rozkłady pokazujące niektóre zależności
 
@@ -272,6 +290,7 @@ z <- ggplot(daneKNN, aes(x=stage, y = age, fill=stage)) + geom_boxplot(size=1.2,
                                          colour ="gray26"),
         plot.title = element_text(color="gray26", size=18, family="serif")) +
   labs(y = "Age")
+
 x <- ggplot(daneKNN, aes(x=stage, y = bili, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
   scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
   ggtitle("Bilirunbin by stage") +
@@ -378,18 +397,51 @@ corrplot(corMat,method="number", tl.col = 'black')
 #Właściwa analiza histori zdarzeń
 
 Surv(daneKNN$time, daneKNN$cens)
-pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)
-pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log-log", data=daneKNN)
-pbcKM2 <- survfit(Surv(time, cens) ~ 1, conf.type="plain", data=daneKNN)
+pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="plain", data=daneKNN) #KM
+pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)  #KM
+pbcNELS=survfit(Surv(time,cens) ~ 1, conf.type ="plain", type="fleming-harrington",data=daneKNN) #Nelson - Aelen
+
 summary(pbcKM)
-plot(pbcKM)
-lines(pbcKM1, col="red")
-lines(pbcKM2, col="red")
+summary(pbcKM1)
+summary(pbcNELS)
+
+daneKNN$cens <- as.numeric(daneKNN$cens)
+
+#Estymatory dla całej zbiorowosci
 
 ggsurvplot(
-  fit = survfit(Surv(time, cens) ~ 1, data = daneKNN), 
+  fit = pbcKM, 
   xlab = "Days", 
-  ylab = "Overall survival probability")
+  ylab = "Overall survival probability with Kaplan - Meier estimator and plain confidence interval")
+
+ggsurvplot(
+  fit = pbcKM1, 
+  xlab = "Days", 
+  ylab = "Overall survival probability with with Kaplan - Meier estimator and log confidence interval",
+  palette = "blue")
+
+ggsurvplot(
+  fit = pbcNELS, 
+  xlab = "Days", 
+  ylab = "Overall survival probability with Nelson - Aelen estimator",
+  palette = "limegreen")
+
+#Utworzenie nowych zmiennych na bazie zmiennych ilościowych
+
+daneKNN$Age_cat=quantcut(daneKNN$age,q=4)
+daneKNN$bili_cat=quantcut(daneKNN$bili,q=4)
+daneKNN$chol_cat=quantcut(daneKNN$chol,q=4)
+daneKNN$albumin_cat=quantcut(daneKNN$albumin,q=4)
+daneKNN$copper_cat=quantcut(daneKNN$copper,q=4)
+daneKNN$alk_cat=quantcut(daneKNN$alk.phos,q=4)
+daneKNN$ast_cat=quantcut(daneKNN$ast,q=4)
+daneKNN$trig_cat=quantcut(daneKNN$trig,q=4)
+daneKNN$plat_cat=quantcut(daneKNN$platelet,q=4)
+daneKNN$pro_cat=quantcut(daneKNN$protime,q=4)
+
+
+
+#Dla grup + Log Rank test
 
 ggsurvplot(survfit(Surv(time, cens) ~ sex, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -399,6 +451,33 @@ ggsurvplot(survfit(Surv(time, cens) ~ sex, data = daneKNN),
            surv.median.line = "hv", 
            ggtheme = theme_bw(),
            palette = c("navajowhite3","plum4"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ trt, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("lightseagreen","cornsilk3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ ascites, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("darkseagreen4","coral3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ spiders, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("forestgreen", "chocolate3"))
 
 ggsurvplot(survfit(Surv(time, cens) ~ hepato, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -416,7 +495,7 @@ ggsurvplot(survfit(Surv(time, cens) ~ edema, data = daneKNN),
            linetype = "strata",
            surv.median.line = "hv", 
            ggtheme = theme_bw(),
-           palette = c("navajowhite3","plum4"))
+           palette = c("springgreen3","tan3","tomato3"))
 
 ggsurvplot(survfit(Surv(time, cens) ~ stage, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -427,35 +506,138 @@ ggsurvplot(survfit(Surv(time, cens) ~ stage, data = daneKNN),
            ggtheme = theme_bw(),
            palette = c("palegreen3", "skyblue3","salmon3","brown3"))
 
-#Wykresy dla grup
-pbcSex = survfit(Surv(time, cens) ~ sex, conf.type="plain", data=daneKNN)
-summary(pbcSex)
-plot(pbcSex, col=c("red","green"))
+ggsurvplot(survfit(Surv(time, cens) ~ Age_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
 
-pbcHepato = survfit(Surv(time, cens) ~ hepato, conf.type="plain", data=daneKNN)
-summary(pbcHepato)
-plot(pbcHepato, col=c("red","green"))
-legend(50,0.3,c("Enlarged liver","Normal liver"),lty=1, col=c("green","red"),bty="n")
+ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
 
-pbcTrt = survfit(Surv(time, cens) ~ trt, conf.type="plain", data=daneKNN)
-summary(pbcTrt)
-plot(pbcTrt, col=c("red","green"))
+ggsurvplot(survfit(Surv(time, cens) ~ chol_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
 
-#Nelson - Aelen
-pbcNELS=survfit(Surv(time,cens) ~ 1, conf.type ="plain", type="fleming-harrington",data=daneKNN)
+ggsurvplot(survfit(Surv(time, cens) ~ albumin_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ copper_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ alk_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ ast_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ trig_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ plat_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+ggsurvplot(survfit(Surv(time, cens) ~ pro_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata",
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
 
 # skumulowanego hazardu
-plot(pbcKM, fun="cumhaz",xlab="Czas", ylab="Skumulowany hazard")
-lines(pbcNELS, fun="cumhaz",col="red")
+ggsurvplot(survfit(Surv(time, cens) ~ sex, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_bw(), 
+           palette = c("navajowhite3","plum4"),
+           fun = "cumhaz")
 
-s1=daneKNN[sample(nrow(daneKNN),size=60, replace=FALSE),] #mała próba
-pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN) #estymator KM
-pbcNelsSample <- survfit(Surv(time,cens) ~ 1, conf.type ="log-log", type="fleming-harrington",data=s1) # estymator NA dla małej próby
-pbcNels <- survfit(Surv(time,cens) ~ 1, conf.type ="log-log", type="fleming-harrington",data=daneKNN) # estymator NA
-summary(pbcNels) #podsumowanie N-A
-plot(pbcKM) #wykres KM
-lines(pbcNels, col="red") #wykres KM + N-A
-lines(pbcNelsSample, col="blue") #wykres KM + N-A + N-A dla malej próbki
+ggsurvplot(survfit(Surv(time, cens) ~ stage, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_bw(), 
+           palette = c("palegreen3", "skyblue3","salmon3","brown3"),
+           fun = "cumhaz")
+
+ggsurvplot(survfit(Surv(time, cens) ~ hepato, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_bw(), 
+           palette = c("palegreen4", "indianred3"),
+           fun = "cumhaz")
+
+ggsurvplot(survfit(Surv(time, cens) ~ trig_cat, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_bw(), 
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"),
+           fun = "cumhaz")
+
+ggsurvplot(survfit(Surv(time, cens) ~ copper_cat, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_bw(), 
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"),
+           fun = "cumhaz")
+
+ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_bw(), 
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"),
+           fun = "cumhaz")
 
 
 #### model PH Coxa ####
