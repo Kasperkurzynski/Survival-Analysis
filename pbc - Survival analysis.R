@@ -675,7 +675,7 @@ ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneKNN),
 Cox <- coxph(Surv(time,cens)~age+sex+ascites+hepato+spiders+bili+chol+albumin+copper+alk.phos+ast+trig+platelet+protime, data = daneKNN)
 summary(Cox)
 #globalny test Walda (p=<2e-16) wskazuje, ze przynajmniej 1 zmienna objasniajaca w modelu statystycznie rozni sie od 0, czyli jest istotna
-#zmienne: trt,sex,ascites,spiders,chol,alk.phos,ast,trig,platelet nie sa statystycznie rozne od 0, bo p-value <0,05
+#zmienne: sex,ascites,spiders,chol,alk.phos,ast,trig,platelet nie sa statystycznie rozne od 0, bo p-value <0,05
 
 # estymacja modelu metoda krokowa 
 library(MASS)
@@ -698,6 +698,9 @@ summary(Cox1)
 #wraz ze wzrostem protime o 1, hazard (ryzyko) zgonu rosnie o 38,0% ceteris paribus
 
 # WERYFIKACJA ZALOZENIA PROPORCJONALNOSCI
+#kluczowym założeniem, które musi być spełnione, by model prawidłowo odzwierciedlał 
+#wpływ zmiennych objaśniających na rozkład czasu trwania, jest założenie proporcjonalności hazardów.
+#Spełnienie tego założenia powinno być zweryfikowane dla każdej ze zmiennych objaśniających w modelu.
 Prop <- cox.zph(Cox1, transform = 'km') #Kaplana-Meiera
 print(Prop)
 plot(Prop)
@@ -706,7 +709,10 @@ plot(Prop)
 Cox2 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN)
 summary(Cox2)
 
-# graficzna weryfikacja zalozenia proporcjonalnosci
+# graficzna weryfikacja zalozenia proporcjonalnosci - metoda skalowanych reszt Schoenfelda
+#Ocenę tego, czy założenie proporcjonalności jest spełnione dokonuje się wzrokowo, 
+#sprawdzając czy punkty na wykresie układają się wzdłuż linii poziomej.
+#Wyraźna obserwowana tendencja w przebiegu tej krzywej, sugeruje brak proporcjonalności zmiennej.
 reszty <- resid(Cox1, type="scaledsch") 
 Time <- as.numeric(rownames(reszty))
 zmienne <- names(daneKNN[,c(5,8,11,13,14,16,19)])
@@ -717,17 +723,31 @@ for (i in 1:7) {
        ylab="Skalowane reszty Schoenfelda", pch=20, cex=0.7)
   lines(smooth.spline(log(Time), reszty[,i] ), lwd=3 )
 }
+#ciezko ocenic po wykresie, ale nalezy tez uznac ze zmienna: bill i protime nie spelnia zalozen proporcjonalnosc
 
-# jednostki odstajace
+# JEDNOSTKI ODSTAJACE
+#Ważnym aspektem ewaluacji modeli Coxa jest badanie jednostek odstających, tj. tych które:
+  #mają nietypową konfigurację zmiennych objaśniających,
+  #wywierają niepożądany wpływ na oszacowania parametrów
+  #mają niepożądany wpływ na dopasowanie modelu [Hosmer i inni 2008].
+#Są to punkty na wykresach oddalone od pozostałych. Jednostki o nietypowej konfiguracji zmiennych objaśniających 
+#mogą w nieproporcjonalny sposób wpływać na oszacowania parametrów strukturalnych modelu.
+
 deviance <- residuals(Cox2,type="deviance")
 s <- Cox2$linear.predictors
 plot(s,deviance,xlab="Liniowy predyktor",ylab="Reszty odchylen",cex=0.5, pch=20)
 abline(h=c(3,-3),lty=3)
 daneKNN$deviance <- deviance
 c1 <- which(daneKNN$deviance< c(-3))
-#jest 1 jednostka odstajaca (reszty odchylen<-3)
+#za wartości nietypowe można uznać te, dla których reszty odchyleń przyjmują wartości ±3 lub więcej. 
+#Reszty odchyleń są więc podstawowym narzędziem identyfikacji wartości nietypowych. 
+#W tym celu należy przeanalizować rozkład punktów na wykresach korelacyjnych pomiędzy resztami odchyleń, a wartościami poszczególnych zmiennych objaśniających. 
+#Jednostki nietypowe mogą być jednocześnie jednostkami wpływowymi [Hosmer i inni, 2008, s. 184-191].
 
-# jednostki wplywowe
+#INTERPRETACJA: jest 1 jednostka odstajaca (reszty odchylen<-3) - jest to ta o numerze 253
+
+
+# JEDNOSTKI WPLYWOWE
 dfb <- residuals(Cox2,type="dfbeta")
 n <- dim(dfb)[1]
 obs.nr <- c(1:n)
@@ -736,6 +756,7 @@ for (j in 1:5) {
   plot(obs.nr,dfb[,j],xlab="Numer jednostki",ylab="Przyrost oceny parametru",
        main=zmienne[j])
 }
+# W przypadku wysokich wartości przyrostu oceny parametru należy rozważyć możliwość usunięcia danej jednostki z próby
 
 a1 <- which(abs(dfb[,1])>(0.004)) #usunac te jednostki
 a2 <- which(abs(dfb[,2])>(0.06))
@@ -744,15 +765,17 @@ a4 <- which(abs(dfb[,4])>(0.0004))
 a5 <- which(abs(dfb[,5])>(0.001))
 
 c <- sort(unique(c(a1,a2,a3,a4,a5,c1)))
+c #jednostki o numerze 48, 166, 231, 233 oraz 253 usuwamy z bazy danych bo sa odstajace i wplywowe
 daneKNN_1 <- daneKNN[-c,] #zredukowany zbior
 
+#szacowanie modelu Coxa jeszcze raz na zredukowanej bazie danych
 Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
 summary(Cox3)
 library(MASS)
 stepAIC(Cox3,direction="backward")
 
 # INTERPRETACJA PARAMETROW: 
-#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 4,9% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 5,0% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
 #pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 100,5% wyzszy niz pacjenci z hepato = 0 ceteris paribus
 #wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
 #wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
@@ -760,7 +783,10 @@ stepAIC(Cox3,direction="backward")
 
 # METODA RESZT MARTYNGALOWYCH - badamy czy wystepuje liniowosc
 #Jeżeli zmienna objaśniająca 𝑋 jest ilościowa, to wprowadzenie jej do modelu Coxa w 
-#jest równoważne przyjęciu założenia, że łączy ją związek liniowy z logarytmem hazardu
+#jest równoważne przyjęciu założenia, że łączy ją związek liniowy z logarytmem hazardu.
+#Jedna z najczesciej spotykanych metod graficznych jest metoda reszt martyngalowych
+#polega na wyznaczeniu reszt martyngałowych dla modelu bez zmiennych objaśniających 
+#i zestawieniu ich z badaną zmienną objaśniającą na wykresie korelacyjnym
 zmn1 <- daneKNN_1$age
 lab1 <- "WIEK (lata)"
 reszty1 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
@@ -793,19 +819,30 @@ lines(lowess(zmn4, reszty4,delta=1),lwd=2)
 #ast - WYSTEPUJE LINIOWOSC
 
 #TRANSFORMACJA ZMIENNEJ copper
+#W przypadku podejrzenia braku liniowości związku, stosowane są różne metody transformacji zmiennej objaśniającej.
+#Najpopularniejsze z nich, to:
+  #dychotomizacja zmiennej objaśniającej (wyznaczenie optymalnego punktu odcięcia)
+
 #dychotomizacja
+#Dychotomizacja zmiennej ciągłej to zastąpienie jej przez zmienną zero-jedynkową taką, że 
+#zmienna ta przyjmuje wartość 0, gdy zmienna ciągła przyjmuje wartości równe lub mniejsze 
+#niż punkt odcięcia, oraz wartość 1, gdy zmienna ciągła przyjmuje wartości większe niż punkt odcięcia.
 Cox4 <- coxph(Surv(time, cens)~zmn3,data=daneKNN_1)
 A1 <- round(AIC(Cox3),2) #akaike z modelu coxa
 A1
 cutpoint <- cutp(Cox4)$zmn3 ## optymalny punkt odciecia
 c <- (zmn3>=cutpoint$zmn3[1])*1+0 #jezeli zmienna jest >= punkotwi odciecia to przypisuje 1 w przeciwnym wypadku 0
 
+#ponowna estymacja modelu Coxa po dychotomizacji
 Cox5 <- coxph(Surv(time, cens)~c,data=daneKNN_1)
 A2 <- round(AIC(Cox5),2)
 A2
 # teraz jest gorzej bo Akaike jest duzo wyzszy niz przed dychotomizacja
 
+
 #wielomiany ulamkowe
+#Metoda polega na poszukiwaniu dla zmiennej 𝑋, funkcji 𝑔(𝑥), która 
+#najlepiej odzwierciedla prawdziwą relację zmiennej 𝑋 i logarytmu funkcji hazardu.
 m3 <- mfp(Surv(time,cens)~ fp(zmn3, df = 4, select = 0.05),family=cox, data=daneKNN_1) ## wielomiany ulamkowe
 m3
 A3 <- round(AIC(m3))
@@ -831,7 +868,7 @@ rbind(A1,A2,A3,A4)
 Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
 summary(Cox3)
 # INTERPRETACJA PARAMETROW: 
-#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 4,9% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+#jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 5,0% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
 #pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 100,5% wyzszy niz pacjenci z hepato = 0 ceteris paribus
 #wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
 #wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
