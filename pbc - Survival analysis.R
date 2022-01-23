@@ -420,12 +420,13 @@ corrplot(corMat,method="number", tl.col = 'black')
 Surv(daneKNN$time, daneKNN$cens)
 pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="plain", data=daneKNN) #KM
 pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)  #KM
-pbcNELS=survfit(Surv(time,cens) ~ 1, conf.type ="plain", type="fleming-harrington",data=daneKNN) #Nelson - Aelen
+pbcNELS <- survfit(Surv(time,cens) ~ 1, conf.type ="plain", type="fleming-harrington",data=daneKNN) #Nelson - Aelen
 
 summary(pbcKM)
 summary(pbcKM1)
 summary(pbcNELS)
 
+daneKNN$cens <- as.character(daneKNN$cens)
 daneKNN$cens <- as.numeric(daneKNN$cens)
 
 #Estymatory dla całej zbiorowosci

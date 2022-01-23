@@ -20,11 +20,31 @@ knitr::opts_chunk$set(echo = TRUE,
 ```
 
 ![](wellness.jpg)
-***
 
-## Opis problemu i zbioru danych
+W niniejszej analizie wykorzystano zbiór danych *pbc* z pakietu *Survival*. Badany jest wpływ poszczególnych zmiennych, takich jak m.in. wiek, stadium choroby czy związane z badanym schorzeniem symptomy na przeżycie osób cierpiących na pierwotne stwardniające zapalenie dróg żółciowych. Pierwotne stwardniające zapalenie dróg żółciowych (ang. *primary sclerosing cholangitis*) jest chorobą autoimmunologiczną prowadzącą do wyniszczenia dróg żółciowych w wątrobie. Rozwój choroby jest powolny, lecz nieunikniony, prowadzący do marskości, a nawet wyniszczenia wątroby. Dane pochodzą z badania w Mayo Clinic przeprowadzonego w latach 1974-1984. Jednostką badania jest zbiorowość 424 pacjentów chorujących na PBC skierowanych na badanie pomiędzy 1974 a 1984 rokiem. W analizie przeżycia pod uwagę wzięto tylko pierwsze 312 przypadków, dla których dane są najbardziej kompletne. Zbiór *pbc* zawiera takie zmienne jak:
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+* **Id** – numer pacjenta
+* **Age** – wiek w latach
+* **Albumin** – *serum albumin* (g/dl), główne białka surowicy krwi, które są produkowane w wątrobie. Pełnią funkcję transportową dla hormonów, leków, kwasów tłuszczowych lub aminokwasów. Przybliżona norma dla osoby dorosłej to: 3,5 – 5,5 g/dl.
+* **Alk.phos** – *alkaline phosphatase* (U/liter),  fostaza alkaliczna to enzym występujący w całym organizmie. Jest to rodzaj białka w komórce, które działa jak katalizator i umożliwia zachodzenie pewnych procesów. Prawidłowy zakres fostazy alkaicznej w organizmie to 44 – 147 U/liter lub 30 – 120 U/liter według innych źródeł.
+* **Ascites** – *presence of ascites*, wodobrzusze to nagromadzenie płynu w jamie brzusznej. Często występuje w wyniku marskości wątroby. Pacjenci posiadający wodobrzusze zostali oznaczeni jako „1”, natomiast pozostali jako „0”.
+* **Ast** – *aspartate aminotransferase* (U/ml), test aminostransferazy asparaginianowej ma za zadanie dowiedzieć się czy wątroba jest uszkodzona. Prawidłowy wynik aktywności aminotransferazy asparaginianowej powinien mieścić się w granicach 5 – 40 IU/L. Przekroczona norma może wskazywać na ciężkie uszkodzenie wątroby.   
+* **Bili** – *serum bilirunbin* (mg/dl), bilirubina to barwnik żółciowy, który pochodzi z rozpadu krwinek czerwonych. Jej stężenie we krwi pozwala ocenić funkcjonowanie wątroby. Wzrost tego barwnika może być przyczyną żółtaczki. Bilirubina całkowita powinna mieścić się u osoby dorosłej w normach od 0,2 mg/dl do 1,1 mg/dl. 
+* **Chol** – *serum cholesterol* (mg/dl), Ilość cholesterolu w surowicy. Jego poziom u zdrowej osoby powinien wynosić poniżej 200 mg/dl.
+* **Copper** – *urine copper* (ug/day), ilość miedzi w moczu, norma mieści się w przedziale 10 – 30 ug/day. Ilość miedzi w moczu bada się między innymi w związku z podejrzeniem marskości wątroby.
+* **Edema** – obrzęk spowodowany nadmiarem płynu uwięzionego w tkankach organizmu. Często może być wynikiem marskości wątroby. Pacjenci niechorujący zostali oznaczeni jako „0”, pacjenci, u których schorzenie zostało wyleczone lub było nieleczone oznaczeni są jako „0,5”, natomiast pacjentów, u których *edema* występuje pomimo zastosowania terapii diuretykami oznaczono jako „1”.
+* **Hepato** – obecność powiększonej wątroby (hepatomegalii), Pacjenci, u których zdiagnozowano powiększenie wątroby zostali oznaczeni jako „1”, natomiast pacjenci posiadający wątrobę o normalnych rozmiarach jako „0”.
+* **Platelet** – ilość płytek krwi, inaczej trombocytów.  Odgrywają kluczową rolę w procesie krzepnięcia. Za normę uważa się posiadanie 150 – 400 tys./mikrolitr.
+* **Protime** – *standardised blood clotting time*, czas krzepnięcia krwi. Istnieją różne sposoby testowania czasu krzepnięcia krwi. Normą dla testu zastosowanego w badaniu Mayo jest przedział 9,5 – 11,8 sekundy.
+* **Sex** – płeć, mężczyźni oznaczeni jako „m”, kobiety oznaczone jako „f”.
+* **Spiders** – *blood vessel malformations in the skin*, malformacja naczyniowa to nienowotworowe zmiany naczyniowe, które spowodowane są nieprawidłowym rozwojem naczyń. Najczęściej pojawiają się na skórze i błonach śluzowych w obszarze głowy i szyi oraz w ośrodkowym układzie nerwowym. Pacjenci, u których została zdiagnozowana ta choroba zostali oznaczeni jako „1”, natomiast pozostali jako „0”.
+* **Stage** – *histologic stage of disease (needs biopsy)* – Histologiczne stadium choroby I zapotrzebowanie na biopsję. Jego poziom został określony na skali od 1 do 4, gdzie 1 oznacza wczesne stadium, a 4 – późne. 
+* **Status** – status w punkcie końcowym. Został określony z pomocą trzech cyfr, gdzie „0” oznacza wartość cenzurowaną, „1” to pacjenci, którzy otrzymali przeszczep wątroby, natomiast „2” oznaczono osoby, które zmarły. Do celów projektowych pacjenci oznaczeni za pomocą „1” zostali zaklasyfikowani jako jednostki cenzurowane.
+* **Time** – liczba dni pomiędzy rejestracją a śmiercią, transplantacją lub innym powodem przerwania badania.
+* **Trt** – zmienna oznaczająca czy dany pacjent został poddany działaniu leku D-penicillmain lub placebo. „1” zostali oznaczeni pacjenci, którym został podany lek, natomiast „2” pacjenci, którzy otrzymali placebo. 
+* **Trig** – ilość trójglicerydów w organizmie. Trójglicerydy to tłuszcze proste i złożone, które są wykorzystywane jako budulec tkanki tłuszczowej i źródło energii. Ich podwyższony poziom może oznaczać między innymi stłuszczenie wątroby. Prawidłowy poziom trójglicerydów powinien wynosić poniżej 150 mg/dl.
+
+  Celem badania jest wyodrębnienie czynników wpływających na przeżywalność osób cierpiących na pierwotne stwardniające zapalenie dróg żółciowych.
 
 Biblioteki wykorzystane do realizacji projektu:
 
@@ -77,14 +97,18 @@ dane <- dane[1:312,]
 
 ___
 
-## Prezentacja danych
+## **Prezentacja danych**
+
+  Poniżej zaprezentowano **10** pierwszych i **10** ostatnich rekordów ze zbioru danych **pbc**. W zbiorze występują zmienne zarówno jakościowe, jak i ilościowe. Większość zmiennych jakościowych (wyjątek: sex) zakodowana została za pomocą cyfr "0" i "1" i na tym etapie pracy występują jako zmienne typu numerycznego. Do dalszej części projektu konieczne będzie ich przekształcenie.
 ```{r}
 head(dane,10)
 tail(dane,10)
 ```
 ___
 
-## Ilość braków danych
+## **Ilość braków danych**
+
+Sprawdzone zostały także braki danych, których najwięcej jest w przypadku zmiennej dotyczącej poziomu cholesterolu (**28** braków) oraz ilości trójglicerydów w organizmie (**30** braków). Nieco mniejszą liczbą braków danych obarczone były takie zmienne jak ilość miedzi w moczu (**2** braki) oraz ilość płytek krwi (**4** braki).
 ```{r}
 NA_count <- colSums(is.na(dane))
 NA_count
@@ -92,7 +116,9 @@ barplot(NA_count)
 ```
 ___
 
-## Imputacja danych i przekształcanie zmiennych
+## **Imputacja danych i przekształcanie zmiennych**
+
+W celu pozbycia się braków danych wykorzystano funkcję *kNN* z pakietu *VIM* – imputację danych wykonano za pomocą metody k-najbliższych sąsiadów (parametr k ustawiono jako 5). Co więcej, zmienne wcześniej zakodowane jako zmienne ilościowe, przekształcono w zmienne jakościowe (**status**, **trt**, **ascites**, **spiders**, **hepato**, **stage**, **edema**, **cens**).
 ```{r}
 daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
 
@@ -113,9 +139,9 @@ summary(daneKNN)
 ```
 ___
 
-## Graficzna prezentacja danych oraz wybrane statystyki opisowe 
+## **Graficzna prezentacja danych oraz wybrane statystyki opisowe**
 
-### Rozkłady zmiennych ilościowych 
+### **Rozkłady zmiennych ilościowych** 
 
 ```{r fig.height=10, fig.width=8}
 a <- ggplot(data = daneKNN, aes(x = age)) + geom_histogram(alpha = 0.7, binwidth = 5, fill="darkorange") + theme_minimal() +
@@ -196,15 +222,42 @@ c2 <- ggplot(data = daneKNN, aes(x = time, fill = cens)) + geom_histogram(alpha 
         axis.title.x = element_blank(),
         plot.title = element_text(color="gray26", size=20, family="serif")) +
   labs(y = "N")
+```
 
+#### **Rozkład zmiennych age, bili, chol i albumin**
+
+W przypadku zmiennej dotyczącej wieku, najniższą wartością jest **26**, najwyższą zaś **78**. Średni wiek badanych osób to 50 lat i wokół tej wartości skupia się większość obserwacji.
+Poziom bilirubiny w normie waha się od **0,2 mg/dl** do **1,1 mg/dl** i w przypadku połowy obserwacji jej wartości nie przekraczają **1,35 mg/dl**. Natomiast obserwacja, u której występuje najwyższa wartość bilirubiny to aż **28 mg/dl**.
+Podobnie jest w przypadku cholesterolu, którego norma powinna wynosić mniej niż **200 mg/dl**. Pomimo że rozkład zmiennej charakteryzuje się silną asymetrią prawostronną, to u większości jednostek cholesterol przekracza zakładaną normę, bowiem wartość pierwszego kwartyla to już **252 mg/dl**. Wartość maksymalna przekracza normę niemal dziewięciokrotnie (**1775 mg/dl**). Zmienna albumin posiada rozkład lewostronny, choć w jego przypadku asymetria nie jest duża.
+```{r fig.height=10, fig.width=8}
 grid.arrange(a,b,c,d)
+```
+
+#### **Rozkład zmiennych copper, alk.phos., asp i trig**
+
+Zmienne widoczne na poniższych wykresach charakterysują sie asymetrą prawostronną. Najmniejsza asymetria prawostronna widoczna jest dla zmiennej **aspartate amino.**.
+```{r fig.height=10, fig.width=8}
 grid.arrange(a1,b1,c1,d1)
+```
+
+#### **Rozkład zmiennych platelet i protime**
+
+Z histogramu dotyczącego zmiennej platelet wynika że w przypadku większości pacjentów ilość płytek krwi (trombocytów) była w normie (**150 – 400 tys./mikrolitr**). Podobnie jest w przypadku zmiennej protime, której 50% wartości mieściło się w przedziale **[10, 11,1]**, a normą czasu krzepnięcia krwi w teście zastosowanym w badaniu Mayo jest przedział 
+**[9,5, 11,8]** sekundy.
+```{r fig.height=10, fig.width=8}
 grid.arrange(a2,b2)
+```
+
+#### **Rozkład zmiennej time z podziałem na jednostki cenzurowane i takie, które doznały zdarzenia**
+
+Rozkłady zmiennych dotyczących zarówno cenzurowania jak i zdarzenia względem czasu trwania nie różnią się znacząco.
+```{r fig.height=10, fig.width=8}
 c2
 ```
 
-### Rozkłady zmiennych jakościowych 
-```{r fig.height=10, fig.width=8}
+### **Rozkłady zmiennych jakościowych** 
+
+```{r}
 e <- daneKNN %>%
   count(sex) %>%
   ggplot() + geom_col(aes(x = sex, y = n, fill = sex), alpha = 0.7)+ geom_label(aes(x = sex, y = n, label = n)) + scale_fill_manual(values = c("navajowhite3","plum4")) +
@@ -332,15 +385,42 @@ h1 <- daneKNN %>%
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
         plot.title = element_text(color="gray26", size=19, family="serif"))
+```
 
+#### **Podział pacjentów ze względu na zmienną sex i trt**
+
+Jeśli chodzi o rozkłady zmiennych jakościowych, obserwuje się znacznie większą liczbę pacjentów płci żeńskiej (**276** jednostek) w porównaniu do liczby pacjentów płci męskiej (zaledwie **36** jednostek).
+Niemal połowa badanych jednostek otrzymała placebo (**154** osoby), **158** osób zostało poddanych działaniu leku D-penicillmain.
+
+```{r fig.height=10, fig.width=8}
 grid.arrange(e,f)
+```
+
+#### **Podział pacjentów ze względu na zmienną ascites i hepato**
+
+Spośród **312** badanych jednostek tylko **24** osoby cierpiały na wodobrzusze, natomiast jeżeli chodzi o obecność powiększonej wątroby, choroba ta została wykryta już u **160** pacjentów.
+```{r fig.height=10, fig.width=8}
 grid.arrange(g,h)
+```
+
+#### **Podział pacjentów ze względu na zmienną edema i stage**
+
+U większości badanych (**263** jednostki) obrzęk spowodowany nadmiarem płynu uwięzionego w tkankach organizmu nie występuje. W przypadku **29** osób schorzenie zostało wyleczone lub było nieleczone, a u **20** osób **edema** występuje pomimo zastosowania terapii diuretykami. Najwięcej badanych znajduje się w późniejszych stadiach choroby: III (**120** jednostek) oraz IV (**109** jednostek). Najmniej jednostek znajduje się w I stadium choroby i jest to **16** osób spośród wszystkich badanych.
+```{r fig.height=10, fig.width=8}
 grid.arrange(e1,f1)
+```
+
+#### **Podział pacjentów ze względu na zmienną spiders i cens**
+
+Stosunkowo więcej jednostek niż w przypadku wyżej wymienionych schorzeń oraz objawów współwystępujących charakteryzuje się występowaniem zmian naczyniowych, bowiem to już **90** badanych. **125** spośród badanych jednostek to obserwacje cenzurowane.
+
+```{r fig.height=10, fig.width=8}
 grid.arrange(g1,h1)
 ```
 
-### Rozkłady pokazujące wybrane zależności
-```{r fig.height=10, fig.width=8}
+
+### **Rozkłady pokazujące wybrane zależności**
+```{r}
 z <- ggplot(daneKNN, aes(x=stage, y = age, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
   scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
   ggtitle("Age by stage") +
@@ -428,15 +508,36 @@ z2 <- ggplot(daneKNN, aes(x=hepato, y = copper, fill=hepato)) + geom_boxplot(siz
                                          colour ="gray26"),
         plot.title = element_text(color="gray26", size=18, family="serif")) +
   labs(y = "Copper")
+```
 
+#### **Wykresy pudełkowe przedstawiające zależności pomiędzy zmienną age i stage oraz bili i stage**
+
+Najmłodsze z badanych osób znajdują się raczej w I stadium choroby, najstarsze zaś w ostatnim IV.  Najwyższymi wartościami poziomu barwnika żółciowego charakteryzują się osoby z ostatniego stadia choroby. 
+```{r fig.height=10, fig.width=8}
 grid.arrange(z,x)
+```
+
+#### **Wykresy pudełkowe przedstawiające zależności pomiędzy zmienną time i stage oraz bili i ascites**
+
+W przypadku liczby dni pomiędzy rejestracją a śmiercią, transplantacją lub innym powodem przerwania badania – im wyższe stadium choroby, tym krótszy czas obserwacji. 
+
+Osoby z wodobrzuszem charakteryzują się dużo wyższymi wartościami stężenia barwnika żółciowego we krwi.
+```{r fig.height=10, fig.width=8}
 grid.arrange(z1,x1)
+```
+
+#### **Wykresy pudełkowe przedstawiające zależności pomiędzy zmienną copper i hepato oraz bili i hepato**
+
+Podobna ależność występuje w przypadku związku ilości miedzi w moczu, a występowaniem powiększenia wątroby. Analogicznie jest również w przypadku zależności pomiędzy stężeniem barwnika żółciowego, a występowaniem powiększenia wątroby.
+```{r fig.height=10, fig.width=8}
 grid.arrange(z2,x2)
 ```
 
-### Statystyki względem grup
+### **Statystyki względem grup**
 
-##### Statystyki dla wieku względem płci
+##### **Statystyki dla wieku względem płci**
+
+Jeśli chodzi o różnice w wieku pomiędzy grupami kobiet i mężczyzn, nie są one wysokie, w grupie mężczyzn znajduje się jednostka najstarsza, natomiast w grupie kobiet jednostka najmłodsza. Średnia różni się pomiędzy grupami o **7 lat**.
 ```{r}
 tab1 <- daneKNN %>%
   group_by(sex) %>%
@@ -446,7 +547,10 @@ tab1 %>%
   kbl() %>%
   kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
 ```
-##### Statystyki dla bilirunbiny względem obecności edemy
+
+##### **Statystyki dla bilirunbiny względem obecności edemy**
+
+Stężenie barwnika żółciowego jest średnio wyższe u osób, u których występuje obrzęk spowodowany nadmiarem płynu uwięzionego w tkankach organizmu. Co więcej, odchylenie standardowe wskazuje na to, że wartości stężenia barwnika żółciowego u osób, u których **edema** nie występuje, nie różnią się tak bardzo wewnątrz tej grupy, jak w przypadku grup, u których schorzenie zostało wyleczone lub było nieleczone czy też u których **edema** występuje pomimo zastosowania terapii diuretykami.Stężenie barwnika żółciowego jest średnio wyższe u osób, u których występuje obrzęk spowodowany nadmiarem płynu uwięzionego w tkankach organizmu. Co więcej, odchylenie standardowe wskazuje na to, że wartości stężenia barwnika żółciowego u osób, u których **edema** nie występuje, nie różnią się tak bardzo wewnątrz tej grupy, jak w przypadku grup, u których schorzenie zostało wyleczone lub było nieleczone czy też u których **edema** występuje pomimo zastosowania terapii diuretykami.
 ```{r}
 tab2 <- daneKNN %>%
   group_by(edema) %>%
@@ -457,7 +561,9 @@ tab2 %>%
   kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
 ```
 
-##### Statystyki dla bilirunbiny względem stopnia rozwoju choroby
+##### **Statystyki dla bilirunbiny względem stopnia rozwoju choroby**
+
+Średnie stężenie barwnika żółciowego jest największe u osób, które posiadają najwyższe stadium rozwoju choroby.
 ```{r}
 tab3 <- daneKNN %>%
   group_by(stage) %>%
@@ -468,7 +574,9 @@ tab3 %>%
   kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
 ```
 
-##### Statystyki dla poziomu cholesterolu względem płci
+##### **Statystyki dla poziomu cholesterolu względem płci**
+
+Kobiety charakteryzują się stosunkowo nieco wyższym poziomem cholesterolu niż mężczyźni, choć może to wynikać z dysproporcji w liczebności obu grup, bowiem również wartości skrajne są dużo wyższe.
 ```{r}
 tab4 <- daneKNN %>%
   group_by(sex) %>%
@@ -478,9 +586,10 @@ tab4 %>%
   kbl() %>%
   kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
 ```
-Tu będzie tekst
 
-##### Statystyki ilości trójglicerydów względem płci
+##### **Statystyki ilości trójglicerydów względem płci**
+
+Jeśli chodzi o ilość trójglicerydów względem płci, średnia jest wyższa w przypadku mężczyzn, mimo że np. maksymalna wartość dla mężczyzn wynosi **242 mg/dl**, a u kobiet jest dwukrotnie wyższa – **598 mg/dl**.
 ```{r}
 tab5 <- daneKNN %>%
   group_by(sex) %>%
@@ -490,7 +599,10 @@ tab5 %>%
   kbl() %>%
   kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
 ```
-##### Statystyki ilości trójglicerydów względem stopnia rozwoju choroby
+
+##### **Statystyki ilości trójglicerydów względem stopnia rozwoju choroby**
+
+Średnie stężenie trójglicerydów we krwi rośnie również wraz ze stadium rozwoju choroby, choć w średnia w stadium III jest ona nieco niższa niż w stadium IV.
 ```{r}
 tab6 <- daneKNN %>%
   group_by(stage) %>%
@@ -500,8 +612,11 @@ tab6 %>%
   kbl() %>%
   kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
 ```
-### Wykres pokazujący korelacje pomiędzy zmiennymi ilościowymi
-```{r, fig.width=11}
+
+### **Wykres pokazujący korelacje pomiędzy zmiennymi ilościowymi**
+
+Najsilniejsze korelacje występują w przypadku takich par zmiennych jak: protime, copper **(0,22)**; ast, copper **(0,3)**; trig, copper **(0,29)**; ast, chol **(0,35**); trig, chol **(0,28)** czy też protime, platelet **(-0,22)**; protime, albumin **(-0,23)**; copper, albumin **(-0,27)**; ast, albumin **(-0,22)**.
+```{r, fig.width=6, fig.height=6, fig.align='center'}
 doKor <- daneKNN[,c(5, 12,13,14,15,16,17,18,19)]
 corMat <- cor(doKor)
 #corrplot(corMat,method="number", tl.col = 'black')
@@ -510,18 +625,22 @@ corrplot(corMat, method = 'color',addCoef.col = 'black', order = 'AOE', tl.col =
 
 ___
 
-## Estymator Kaplana - Meiera
-```{r}
+## **Funkcja czasu trwania oraz skumulowanego hazardu na podstawie zbioru danych pbc.**
+```{r include=FALSE}
+
 daneKNN$cens <- as.character(daneKNN$cens)
 daneKNN$cens <- as.numeric(daneKNN$cens)
 Surv(daneKNN$time, daneKNN$cens)
 ```
 
-```{r fig.height=9, fig.width=14}
+### **Porównanie estymatorów Kaplana - Meiera i Nelsona - Aelena**
+
+Na wykresach zostały pokazane funkcje przeżycia dla wszystkich jednostek z wykorzystaniem estymatora Kaplana - Meiera oraz Nelsona - Aelena. Dodatkowo, do oszacowania funkcji przeżycia za pomocą estymatora KM zostały wykorzystane dwa rodzaje przedziałów ufności - liniowy i logarytmiczny. Na wykresach brak jest istotnych różnic pomiędzy porównywanymi estymatorami. Potwierdza to również średnia oraz mediana czasu trwania widoczna na podsumowaniu pod wykresami. W momencie w którym wykresy się urywają (po 4000 dni) pozostaje już tylko około 25% jednostek.
+```{r fig.height=8, fig.width=16}
 daneKNN$cens <- as.character(daneKNN$cens)
 daneKNN$cens <- as.numeric(daneKNN$cens)
 pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="plain", data=daneKNN) #KM
-pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)
+pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log-log", data=daneKNN)
 pbcNELS=survfit(Surv(time,cens) ~ 1, conf.type ="plain", type="fleming-harrington",data=daneKNN)
 
 splots <- list()
@@ -547,6 +666,7 @@ summary(pbcKM)$table
 summary(pbcKM1)$table
 summary(pbcNELS)$table
 ```
+
 ```{r, echo = TRUE}
 daneKNN$Age_cat=quantcut(daneKNN$age,q=4)
 daneKNN$bili_cat=quantcut(daneKNN$bili,q=4)
@@ -559,9 +679,14 @@ daneKNN$trig_cat=quantcut(daneKNN$trig,q=4)
 daneKNN$plat_cat=quantcut(daneKNN$platelet,q=4)
 daneKNN$pro_cat=quantcut(daneKNN$protime,q=4)
 ```
-___
 
-## Rozkłady czasu trwania dla grup
+### **Rozkłady czasu trwania dla grup**
+
+Grupy w zmiennych jakościowych zostały wydorębnione na podstawie wariantów zakodowanych w zmienych, natomiast zmienne ilościowe zostały podzielone za pomocą funkcji *quantcut* na 4 przedziały kwartylowe i każdy przedział stanowił odrębny wariant nowopowstałej zmiennej.  
+
+#### **Wykresy funkcji trwania dla zmiennej sex i trt**
+
+Dla zmiennej **sex** większe prawdopodobieństwo przeżycia niemal w każdym momencie trwania jest w grupie kobiet.  Mediana czasu przeżycia dla mężczyzn wynosi **2386** dni, natomiast dla kobiet **3428** dni. Test Log-Rank wskazał na istotne różnice pomiędzy tymi grupami jednostek, więc rozkłady czasu trwania są różne (**p-value = 0.039**). Z kolei dla pacjentów podzielonych względem zmiennej **trt**, test Log-Rank nie wskazał istotnych różnic (**p-value = 0.75**). 
 ```{r fig.height=10, fig.width=12}
 
 groupSplots1 <- list()
@@ -590,9 +715,12 @@ summary(kmsex)$table
 
 kmtrt <- survfit(Surv(time, cens) ~ trt, data = daneKNN)
 summary(kmtrt)$table
-
 ```
 
+
+#### **Wykresy funkcji trwania dla zmiennej ascites i spiders**
+
+Pacjenci, u których stwierdzono wodobrzusze (*ascites*) posiadają dużo niższe prawdopodobieństwo przeżycia w każdym momencie trwania. Istnieją również istotne różnice w grupach wydzielonych na podstawie tej zmiennej (**p-value < 0.0001**). Podobna sytuacja klaruje się w przypadku zmiennej **spiders** (**p-value < 0.0001**). Mediana czasu trwania dla pacjentów, u których wykryto malformacje naczyniową wynosi zaledwie **1847** dni.
 ```{r fig.height=10, fig.width=12}
 groupSplots2 <- list()
 groupSplots2[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ ascites, data = daneKNN),
@@ -622,6 +750,10 @@ kmspiders <- survfit(Surv(time, cens) ~ spiders, data = daneKNN)
 summary(kmspiders)$table
 ```
 
+
+#### **Wykresy funkcji trwania dla zmiennej hepato i edema**
+
+Pacjenci, u których wykryto powiększoną wątrobę (**hepato**) i obrzęk spowodowany nadmiarem płynu uwięzionego w tkankach organizmu (**edema**) posiadają dużo niższe prawdopodobieństwo przeżycia w każdym momencie trwania. Również średnia dni trwania w poszczególnych grupach jest dużo niższa dla osób zmagających się z tymi chorobami. Test Log-Rank wykazał na istotne różnice pomiędzy grupami, a ich rozkładami czasu trwania (**p-value < 0.0001**).
 ```{r fig.height=10, fig.width=12}
 groupSplots3 <- list()
 groupSplots3[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ hepato, data = daneKNN),
@@ -650,6 +782,11 @@ summary(kmhepato)$table
 kmedema <- survfit(Surv(time, cens) ~ edema, data = daneKNN)
 summary(kmedema)$table
 ```
+
+
+#### **Wykresy funkcji trwania dla zmiennej stage**
+
+Wraz ze wzrostem stadium choroby spada prawdopodobieństwo przeżycia jednostek. Średnia czasu trwania dla pacjentów zmniejsza się, im stadium rozwoju choroby jest większe. Test Log-Rank wykazał istotne różnice rozkładów czasu trwania pomiędzy badanymi grupami (**p-value < 0.0001**).
 ```{r fig.height=10, fig.width=10}
 ggsurvplot(survfit(Surv(time, cens) ~ stage, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -663,7 +800,11 @@ kmstage <- survfit(Surv(time, cens) ~ stage, data = daneKNN)
 summary(kmstage)$table
 ```
 
-```{r fig.height=10, fig.width=15}
+
+#### **Wykresy funkcji trwania dla skategoryzowanej zmiennej trig i age**
+
+W przypadku zmiennej **trig** prawdopodobieństwo przetrwania jest większe w grupach, dla których ilość trójglicerydów w organizmie jest niższa. Analogicznie jest w przypadku wieku - im niższy przedział wiekowy, tym większe jest prawdopodobieństwo przeżycia w danej grupie. Test Log-Rank wykazał istotne różnice rozkładów czasu trwania pomiędzy badanymi grupami (**p-value = 0.0024** dla zmiennej **trig** oraz **p-value < 0.0001** dla zmiennej **age**).
+```{r fig.height=11, fig.width=15}
 groupSplots4 <- list()
 groupSplots4[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ trig_cat, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -684,9 +825,19 @@ groupSplots4[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ Age_cat, data = daneK
 
 arrange_ggsurvplots(groupSplots4, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmtrig <- survfit(Surv(time, cens) ~ trig_cat, data = daneKNN)
+summary(kmtrig)$table
+
+kmage <- survfit(Surv(time, cens) ~ Age_cat, data = daneKNN)
+summary(kmage)$table
 ```
 
-```{r fig.height=10, fig.width=14}
+
+#### **Wykresy funkcji trwania dla skategoryzowanej zmiennej bili i chol**
+
+W przypadku zmiennej **bili** prawdopodobieństwo przetrwania jest większe w grupach, dla których stężenie barwnika żółciowego w organizmie jest niższe. Podobnie jest w przypadku cholesterolu - im niższa jest wartość zmiennej **chol**, tym większe jest prawdopodobieństwo przeżycia w danej grupie, z wyjątkiem grupy, dla której cholesterol jest najniższy - w tym wypadku funkcja trwania pokrywa się z pozostałymi. Test Log-Rank wykazał istotne różnice rozkładów czasu trwania pomiędzy badanymi grupami (**p-value < 0.0001** dla zmiennej **bili** oraz **p-value = 0.00067** dla zmiennej **chol**).
+```{r fig.height=11, fig.width=15}
 groupSplots5 <- list()
 groupSplots5[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -707,9 +858,19 @@ groupSplots5[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ chol_cat, data = dane
 
 arrange_ggsurvplots(groupSplots5, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmbili <- survfit(Surv(time, cens) ~ bili_cat, data = daneKNN)
+summary(kmbili)$table
+
+kmchol <- survfit(Surv(time, cens) ~ chol_cat, data = daneKNN)
+summary(kmchol)$table
 ```
 
-```{r fig.height=10, fig.width=14}
+
+#### **Wykresy funkcji trwania dla skategoryzowanej zmiennej albumin i copper**
+
+W przypadku skategoryzowanej zmiennej **albumin**, najniższe prawdopodobieństwo przeżycia jest w grupie osób posiadających niski poziom wartości tej zmiennej. Test Log-Rank wykazał istotne różnice pomiędzy grupami w zależności od ich rozkładów czasu trwania (**p-value < 0.0001**).  Podobna sytuacja występuje w przypadku zmiennej **copper**, jeśli chodzi o różne rozkłady czasu trwania (**p-value < 0.0001**).  Jednakże dla tej zmiennej, niskie wartości oznaczają większe prawdopodobieństwo przeżycia.
+```{r fig.height=11, fig.width=15}
 groupSplots6 <- list()
 groupSplots6[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ albumin_cat, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -730,9 +891,19 @@ groupSplots6[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ copper_cat, data = da
 
 arrange_ggsurvplots(groupSplots6, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmalbumin <- survfit(Surv(time, cens) ~ albumin_cat, data = daneKNN)
+summary(kmalbumin)$table
+
+kmcopper <- survfit(Surv(time, cens) ~ copper_cat, data = daneKNN)
+summary(kmcopper)$table
 ```
 
-```{r fig.height=10, fig.width=12}
+
+#### **Wykresy funkcji trwania dla skategoryzowanej zmiennej alk i ast**
+
+Skategoryzowane zmienne **alk** i **ast** wykazały, że jednostki należące do poszczególnych grup wyodrębnionych z uwagi na wartości tych zmiennych posiadają różne rozkładu czasu trwania. P-value w teście Log-Rank wyniosło odpowiednio **0.002** i **< 0.0001**. Pacjenci, którzy posiadają mniejsze wartości  zmiennej **alk** i **ast** posiadają większe prawdopodobieństwo przeżycia, niż pozostali.
+```{r fig.height=11, fig.width=15}
 groupSplots7 <- list()
 groupSplots7[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ alk_cat, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -753,9 +924,19 @@ groupSplots7[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ ast_cat, data = daneK
 
 arrange_ggsurvplots(groupSplots7, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmalk <- survfit(Surv(time, cens) ~ alk_cat, data = daneKNN)
+summary(kmalk)$table
+
+kmast <- survfit(Surv(time, cens) ~ ast_cat, data = daneKNN)
+summary(kmast)$table
 ```
 
-```{r fig.height=10, fig.width=16}
+
+#### **Wykresy funkcji trwania dla skategoryzowanej zmiennej plat i protime**
+
+W przypadku zmiennej **plat** prawdopodobieństwo przeżycia jest większe w grupach, w których pacjenci charakteryzowali się wyższą ilością trombocytów we krwi - funkcje przetrwania dla trzech przedziałów o najwyższych wartościach się pokrywają w pewnym stopniu, natomiast grupa, w której pacjenci mieli najmniejszą ilość płytek krwi, ma najmniejsze prawdopodobieństwo przeżycia. Test Log-Rank wykazał istotne różnice rozkładów czasu trwania pomiędzy badanymi grupami (**p-value < 0.0001**). Analogiczna sytuacja występuje w przypadku zmiennej dotyczącej krzepnięcia krwi - im dłuższy czas krzepnięcia krwi, tym prawdopodobieństwo przeżycia jest mniejsze. Test Log-Rank wykazał istotne różnice rozkładów czasu trwania pomiędzy badanymi grupami (**p-value < 0.0001**).
+```{r fig.height=11, fig.width=16}
 groupSplots8 <- list()
 groupSplots8[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ plat_cat, data = daneKNN),
            pval = TRUE, conf.int = TRUE,
@@ -777,12 +958,20 @@ groupSplots8[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ pro_cat, data = daneK
 
 arrange_ggsurvplots(groupSplots8, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmplat <- survfit(Surv(time, cens) ~ plat_cat, data = daneKNN)
+summary(kmplat)$table
+
+kmpro <- survfit(Surv(time, cens) ~ pro_cat, data = daneKNN)
+summary(kmpro)$table
 ```
-___
 
-## Graficzna prezentacjia funkcji skumulowanego hazardu dla wybranych zmiennych
 
-### Zmienne sex oraz stage
+### **Graficzna prezentacjia funkcji skumulowanego hazardu dla wybranych zmiennych**
+
+#### **Zmienne sex oraz stage**
+
+Hazard wzrasta szybciej w grupie mężczyzn niż w grupie kobiet. W przypadku zmiennej stage, największą wartość hazardu mają pacjenci z najwyższym stadium rozwoju choroby.
 ```{r fig.height=10, fig.width=16}
 groupHplots <- list()
 groupHplots[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ sex, data = daneKNN),
@@ -803,7 +992,10 @@ arrange_ggsurvplots(groupHplots, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
 ```
 
-### Zmienne hepato oraz skategoryzowana zmienna trig
+
+#### **Zmienne hepato oraz skategoryzowana zmienna trig**
+
+Pacjenci, u których zostało stwierdzone powiększenie wątroby (**hepato**) mają większy hazard niż pacjenci bez tej dolegliwości. Wraz ze wzrostem czasu, różnica hazardów powiększa się. Dla zmiennej skategoryzowanej **trig** hazard jest najwyższy u pacjentów, którzy posiadają największe wartości trójglicerydów, lecz różnice nie są tak bardzo widoczne. 
 ```{r fig.height=10, fig.width=16}
 groupHplots <- list()
 groupHplots[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ hepato, data = daneKNN),
@@ -824,10 +1016,10 @@ arrange_ggsurvplots(groupHplots, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
 ```
 
-### Skategoryzowane zmienne bili i copper
 
-test
+#### **Skategoryzowane zmienne bili i copper**
 
+Hazard jest największy u osób posiadających dużą ilość miedzi w moczu oraz u osób, które posiadają największe stężenie barwnika żółciowego. Pacjenci należący do kategorii z mniejszymi wartościami obydwu zmiennych mają też odpowiednio niższe wartości hazardu.
 ```{r fig.height=10, fig.width=16}
 groupHplots <- list()
 groupHplots[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ copper_cat, data = daneKNN),
@@ -847,11 +1039,14 @@ groupHplots[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneK
 arrange_ggsurvplots(groupHplots, print = TRUE,
   ncol = 2, nrow = 1, risk.table.height = 0.2)
 ```
+
 ___
 
-## Model PH Coxa
+## **Model PH Coxa**
 
-* Zbuduj model PH Coxa. Uwzględnij następujące zagadnienia:
+Modele regresji dla wybranych fukncji zmiennej losowej T, mają za zadanie pokazać relację między analizowaną funkcją, definiujacą rozkład zmiennej losowej T, a zbiorem zmiennych charakteryzujących jednostki należące do badanej populacji. W analizie przeżycia najczęściej modelowanymi funkcjami są funkcja hazardu, funkcja trwania, a czasami także dystrybuanta. W modelu zaproponowanych przez Coxa [1972], funkcja hazardu bazowego szacowana jest nieparametrycznie dla momentów tk, w których wystąpiło zdarzenie, czyli jest to model semiparametryczny. Model Coxa nazywany jest modelem proporcjonalnych hazardów (PH), co oznacza, że dla dwóch jednostek z wektorami zmiennych x i x*, iloraz ich hazardów nie zależy od czasu t.
+
+* Zbudowanie modelu PH Coxa będzie zawierało następujące zagadnienia:
   + interpretacja uzyskanych oszacowań parametrów modelu
   + weryfikacja założeń modelu (proporcjonalność hazardów)
   + wybór postaci funkcji zmiennych objaśniających
@@ -860,51 +1055,71 @@ ___
   + wybór najlepszego modelu
   + ocena dopasowania modelu
 
-### Estymacja modelu
+### **Estymacja modelu**
+
+Globalny test Walda **(p=<2e-16)** wskazuje, ze przynajmniej 1 zmienna objasniajaca w modelu statystycznie rozni sie od 0, czyli jest istotna
+Zmienne: sex,ascites,spiders,chol,alk.phos,ast,trig,platelet nie sa statystycznie rozne od 0, bo **p-value < 0,05**.
 ```{r}  
 Cox <- coxph(Surv(time,cens)~age+sex+ascites+hepato+spiders+bili+chol+albumin+copper+alk.phos+ast+trig+platelet+protime, data = daneKNN)
 summary(Cox)  
 ```
 
-### Zastosowanie funkcji krokowej, która poszukuje modelu najbardziej zoptymalizowanego ze wzgledu na kryterium akaike AIC (tu - metoda wsteczna)
+### **Zastosowanie funkcji krokowej, która poszukuje modelu najbardziej zoptymalizowanego ze wzgledu na kryterium akaike AIC (tu - metoda wsteczna)**
 
-W wyniku tej procedury otrzymano model z 7 zmiennymi objasniajacymi: age,hepato,bili,albumin,copper,ast,protime. Według kryterium AIC zmienna ast mimo p-value < **0,06** powinna znalezc sie w modelu. Pozostałe zmienne na poziomie istotnosci 0,05 sa statystycznie rozne od 0 (czyli istotne), ponieważ **p-value < 0,05**.
+W wyniku tej procedury otrzymano model z 7 zmiennymi objasniajacymi: age,hepato,bili,albumin,copper,ast,protime. Według kryterium AIC zmienna ast mimo p-value jest równe **0,06** powinna znalezc sie w modelu. Pozostałe zmienne na poziomie istotnosci **0,05** sa statystycznie rozne od 0 (czyli istotne), ponieważ **p-value < 0,05**.
 ```{r}  
 stepAIC(Cox,direction="backward")
 ``` 
 
-### Estymacja nowego modelu Coxa po odrzuceniu zmiennych nieistotnych statystycznie
+### **Estymacja nowego modelu Coxa po odrzuceniu zmiennych nieistotnych statystycznie**
 
 * INTERPRETACJA PARAMETROW: 
-  + jezeli wiek wzrosnie o rok, hazard (ryzyko) zgonu rośnie o **3,3%** u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
-  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o **66,2%** wyzszy niz pacjenci z hepato = 0 ceteris paribus
-  + wraz ze wzrostem bili o 1, hazard (ryzyko) zgonu rosnie o **8,9%** ceteris paribus
+  + jeżeli wiek wzrośnie o rok, hazard (ryzyko) zgonu rośnie o **3,3%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus
+  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) mają hazard (ryzyko) zgonu o **66,2%** wyższy niż pacjenci z hepato = 0, ceteris paribus
+  + wraz ze wzrostem bili o 1, hazard (ryzyko) zgonu rosnie o **8,9%**, ceteris paribus
   + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **67%**, ceteris paribus
-  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o **0,3%** ceteris paribus
-  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o **0,4%** ceteris paribus
-  + wraz ze wzrostem protime o 1, hazard (ryzyko) zgonu rosnie o **38,0%** ceteris paribus
+  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o **0,3%**, ceteris paribus
+  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,4%**, ceteris paribus
+  + wraz ze wzrostem protime o 1, hazard (ryzyko) zgonu rośnie o **38,0%**, ceteris paribus
   
 ```{r}  
 Cox1 <- coxph(Surv(time,cens)~age+hepato+bili+albumin+copper+ast+protime, data = daneKNN)
 summary(Cox1)  
 ``` 
 
-### Weryfikacja założenia proporcjonalności
+### **Weryfikacja założenia proporcjonalności**
 
-Jeżeli p > 0,05 to zostaly spełnione zalożenia proporcjalosci. Dla zmiennych: bili oraz protime te założenia nie zostały spełnione, więc należy usunąć te zmienne z modelu.
+Kluczowym założeniem, które musi być spełnione, by model prawidłowo odzwierciedlał wpływ zmiennych objaśniających na rozkład czasu trwania, jest założenie proporcjonalności hazardów.
+Spełnienie tego założenia powinno być zweryfikowane dla każdej ze zmiennych objaśniających w modelu.
+Jeżeli p > 0,05 to zostaly spełnione zalożenia proporcjonalności. Dla zmiennych: bili oraz protime te założenia nie zostały spełnione, więc należy usunąć te zmienne z modelu.
 ```{r, fig.height=12, fig.width=9}  
 Prop <- cox.zph(Cox1, transform = 'km')
 print(Prop)
 par(mfrow=c(4,2))
 plot(Prop)  
 ``` 
-### Estymacja modelu z wykorzystaniem tylko istotnych zmiennych
+
+### **Estymacja modelu z wykorzystaniem zmiennych istotnych statystycznie oraz spełniających założenie o proporcjonalności**
+
+* INTERPRETACJA PARAMETROW: 
+  + jeżeli wiek wzrośnie o rok, hazard (ryzyko) zgonu rośnie o **3,4%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostałych wartościach zmiennych takich samych), ceteris paribus
+  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby (hepato1) mają hazard (ryzyko) zgonu o **102%** wyższy niz pacjenci z hepato = 0, ceteris paribus
+  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **70%**, ceteris paribus
+  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rośnie o **0,5%**, ceteris paribus
+  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,5%**, ceteris paribus
+
 ```{r}  
 Cox2 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN)
 summary(Cox2) 
 ``` 
 
-### Graficzna weryfikacja założenia proporcjonalności
+### **Graficzna weryfikacja założenia proporcjonalności**
+
+**Metoda skalowanych reszt Schoenfelda**
+Ocenę tego, czy założenie proporcjonalności jest spełnione dokonuje się wzrokowo, sprawdzając czy punkty na wykresie układają się wzdłuż linii poziomej. Wyraźna obserwowana tendencja w przebiegu tej krzywej, sugeruje brak proporcjonalności zmiennej.
+
+Ocena na podstawie wykresy wydaje się być problematyczna, ale można zauważyć, że zmienne bill i protime nie spełniają założeń proporcjonalności.
+
 ```{r, fig.height=12, fig.width=12}
 reszty <- resid(Cox1, type="scaledsch") 
 Time <- as.numeric(rownames(reszty))
@@ -917,9 +1132,16 @@ for (i in 1:7) {
   lines(smooth.spline(log(Time), reszty[,i] ), lwd=3 )
 }
 ```
-### Identyfikacja jednostek odstających
 
-W zbiorze znajduje się jedna jednostką odstająca.
+### **Identyfikacja jednostek odstających**
+
+Ważnym aspektem ewaluacji modeli Coxa jest badanie jednostek odstających, tj. tych które:
+  
+  * mają nietypową konfigurację zmiennych objaśniających,
+  * wywierają niepożądany wpływ na oszacowania parametrów
+  * mają niepożądany wpływ na dopasowanie modelu [Hosmer i inni 2008].
+
+Są to punkty na wykresach oddalone od pozostałych. Jednostki o nietypowej konfiguracji zmiennych objaśniających. Mogą w nieproporcjonalny sposób wpływać na oszacowania parametrów strukturalnych modelu. Do identyifikacji wartości nietypowych wykorzystuje się reszty odchyleń. Za wartości nietypowe można uznać te jednostki, dla których reszty odchyleń przyjmują wartości +- 3 lub więcej.
 ```{r}
 deviance <- residuals(Cox2,type="deviance")
 s <- Cox2$linear.predictors
@@ -928,15 +1150,12 @@ abline(h=c(3,-3),lty=3)
 daneKNN$deviance <- deviance
 c1 <- which(daneKNN$deviance < c(-3))
 ```
-### Jednostki wpływowe
 
-* INTERPRETACJA PARAMETROW: 
-  + jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 4,9% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
-  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 100,5% wyzszy niz pacjenci z hepato = 0 ceteris paribus
-  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
-  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
-  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o 0,8% ceteris paribus
-```{r}
+### **Jednostki wpływowe**
+
+W przypadku wysokich wartości przyrostu oceny parametru należy rozważyć możliwość usunięcia danej jednostki z próby. Do usunięcia z próby zakwalifikowały się jednostki o numerze 48, 166, 231, 233 i 253. Są one odbiegające i wpływowe.
+
+```{r, fig.height=8, fig.width=8}
 dfb <- residuals(Cox2,type="dfbeta")
 n <- dim(dfb)[1]
 obs.nr <- c(1:n)
@@ -954,12 +1173,30 @@ a5 <- which(abs(dfb[,5])>(0.001))
 
 c <- sort(unique(c(a1,a2,a3,a4,a5,c1)))
 daneKNN_1 <- daneKNN[-c,] #zredukowany zbior
+```
 
+### **Oszacowanie modelu na zredukowanej bazie danych**
+
+* INTERPRETACJA PARAMETROW: 
+  + jeżeli wiek wzrośnie o 1 rok, hazard (ryzyko) zgonu rośnie o **4,9%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus 
+  + pacjenci z obecnością hepatomegalii lub powiększenia wątroby(hepato1) mają hazard (ryzyko) zgonu o **100,5%** wyższy niż pacjenci z hepato = 0 ceteris paribus
+  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **76%**
+  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rośnie o **0,6%** ceteris paribus
+  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,8%** ceteris paribus
+
+```{r}
 Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
 summary(Cox3)
-stepAIC(Cox3,direction="backward")
 ```
-### Reszty martyngałowe dla zmiennej **age**
+
+### **METODA RESZT MARTYNGALOWYCH - badamy czy wystepuje liniowosc**
+Jeżeli zmienna objaśniająca 𝑋 jest ilościowa, to wprowadzenie jej do modelu Coxa jest równoważne przyjęciu założenia, że łączy ją związek liniowy z logarytmem hazardu. Jedna z najcześciej spotykanych metod graficznych jest metoda reszt martyngalowych. Polega na wyznaczeniu reszt martyngałowych dla modelu bez zmiennych objaśniających i zestawieniu ich z badaną zmienną objaśniającą na wykresie korelacyjnym
+
+### **Reszty martyngałowe dla zmiennej age**
+
+Jeżeli funkcja ta ma kształt zbliżony do liniowego to potwierdza to liniowość relacji między zmienną objaśniającą a logarytmem hazardu, w przeciwnym wypadku kształt funkcji może być wskazówką co do wyboru odpowiedniej metody transformacji zmiennej.
+
+**age** - Potwierdzone założenie o liniowości
 ```{r, fig.height=7, fig.width=7}
 zmn1 <- daneKNN_1$age
 lab1 <- "Age (years)"
@@ -969,7 +1206,9 @@ lines(lowess(zmn1, reszty1,delta=1),lwd=2)
 ```
 
 
-### Reszty martyngałowe dla zmiennej **albumin**
+### **Reszty martyngałowe dla zmiennej albumin**
+
+**albumin** - Potwierdzone założenie o liniowości
 ```{r, fig.height=7, fig.width=7}
 zmn2 <- daneKNN_1$albumin
 lab2 <- "albumin"
@@ -979,7 +1218,9 @@ lines(lowess(zmn2, reszty2,delta=1),lwd=2)
 ```
 
 
-### Reszty martyngałowe dla zmiennej **copper**
+### **Reszty martyngałowe dla zmiennej copper**
+
+**copper** - Brak potwierdzenia założenia o liniowości
 ```{r, fig.height=7, fig.width=7}
 zmn3 <- daneKNN_1$copper
 lab3 <- "copper"
@@ -989,7 +1230,9 @@ lines(lowess(zmn3, reszty3,delta=1),lwd=2)
 ```
 
 
-### Reszty martyngałowe dla zmiennej **ast**
+### **Reszty martyngałowe dla zmiennej ast**
+
+**ast** - Potwierdzone założenie o liniowości
 ```{r, fig.height=7, fig.width=7}
 zmn4 <- daneKNN_1$ast
 lab4 <- "ast"
@@ -997,7 +1240,15 @@ reszty4 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
 plot(zmn4, reszty4, xlab=lab4,ylab="Reszty martynga?owe",cex=0.6)
 lines(lowess(zmn4, reszty4,delta=1),lwd=2)
 ```
-### Transformacja zmiennej **copper**
+
+### **Transformacja zmiennej copper**
+
+W przypadku podejrzenia braku liniowości związku, stosowane są różne metody transformacji zmiennej objaśniającej.
+Najpopularniejsze z nich, to: dychotomizacja zmiennej objaśniającej (wyznaczenie optymalnego punktu odcięcia)
+
+Dychotomizacja zmiennej ciągłej to zastąpienie jej przez zmienną zero-jedynkową taką, że zmienna ta przyjmuje wartość 0, gdy zmienna ciągła przyjmuje wartości równe lub mniejsze niż punkt odcięcia, oraz wartość 1, gdy zmienna ciągła przyjmuje wartości większe niż punkt odcięcia.
+
+Wartość kryterium informacyjnego Akaike po dychotomizacji okazała się dużo gorsza niż przed tym zabiegiem.
 ```{r}
 Cox4 <- coxph(Surv(time, cens)~zmn3,data=daneKNN_1)
 A1 <- round(AIC(Cox3),2) #akaike z modelu coxa
@@ -1009,16 +1260,20 @@ Cox5 <- coxph(Surv(time, cens)~c,data=daneKNN_1)
 A2 <- round(AIC(Cox5),2)
 A2
 ```
-### Zastosowanie wielomianów ułamkowych
+
+### **Zastosowanie wielomianów ułamkowych**
+
+Metoda polega na poszukiwaniu dla zmiennej 𝑋, funkcji 𝑔(𝑥), która najlepiej odzwierciedla prawdziwą relację zmiennej 𝑋 i logarytmu funkcji hazardu. 
+
+Wartość kryterium informacyjnego Akaike ponownie jest wyższa w porównaniu do zmiennej copper przed transformacją.
 ```{r}
 m3 <- mfp(Surv(time,cens)~ fp(zmn3, df = 4, select = 0.05),family=cox, data=daneKNN_1) ## wielomiany ulamkowe
-m3
 A3 <- round(AIC(m3))
 A3
 ```
 
-### Metoda wielomianowej funkcji sklejanej (splajn)
-```{r}
+### **Metoda wielomianowej funkcji sklejanej (splajn)**
+```{r, fig.height=8, fig.width=8}
 int <- quantile(na.omit(zmn3),probs=c(0.05,0.275,.5,.725,.95))
 Cox6 <- coxph(Surv(time,cens)~ns(zmn3,knots=int),data=daneKNN_1)
 pred <- predict(Cox6,type="terms",se.fit=TRUE, terms=1)
@@ -1033,16 +1288,30 @@ A4 <- round(AIC(Cox6),2)
 A4
 ```
 
-### PODSUMOWANIE TRANSFORMACJI ZMIENNEJ copper
+### **Podsumowanie transformacji zmiennej copper**
 
-Mimo wszystko najlepszym modelem jest model bez transformacji zmiennej copper, czyli:
+* A1 - model bez tranformacji
+* A2 - po dychotomizacji
+* A3 - wielomiany ułamkowe
+* A4 - splajn
+
+Mimo wszystko najlepszym modelem jest model bez transformacji zmiennej copper. Interpretacja parametrów w tym modelu przedstawia się w następujący sposób:
+
+* jezeli wiek wzrosnie o 1 rok, hazard (ryzyko) zgonu rośnie o **5,0%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus 
+* pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) mają hazard (ryzyko) zgonu o **100,5%** wyzszy niz pacjenci z hepato = 0 ceteris paribus
+* wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **76%**, ceteris paribus
+* wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rośnie o **0,6%** ceteris paribus
+* wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,8%** ceteris paribus
+
 ```{r}
 rbind(A1,A2,A3,A4)
 Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
 summary(Cox3)
 ```
 
-### MIARY DOPASOWANIA
+### **Miary dopasowania**
+
+Porównując miary dopasowania, najlepszy okazał się model z istotnymi zmiennymi oraz model po usunięciu jednostek wpływowych. Miara tych modeli jest taka sama. Niższą wartość przyjętej miary posiada model ze zmiennymi, które potwierdzały założenie o proporcjonalności hazardu i został oszacowany na wszystkich 312 jednostkach.
 ```{r}
 r2_1 <- coxr2(Cox1) #model otrzymany metoda krokowa przed sprawdzeniem zalozen proporcjonalnosci
 r2_2 <- coxr2(Cox2) #model po odrzuceniu zmiennych niespelniajacych zalozen proporcjonalnosci
