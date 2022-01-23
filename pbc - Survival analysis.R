@@ -154,7 +154,9 @@ c2
 
 #Rozkłady zmiennych jakościowych
 
-e <- ggplot(data = daneKNN, aes(x=sex, fill = sex)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("navajowhite3","plum4")) +
+e <- daneKNN %>%
+  count(sex) %>%
+  ggplot() + geom_col(aes(x = sex, y = n, fill = sex))+ geom_label(aes(x = sex, y = n, label = n)) + scale_fill_manual(values = c("navajowhite3","plum4")) +
   theme_minimal() +
   ggtitle('Number of patients by gender') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -166,9 +168,11 @@ e <- ggplot(data = daneKNN, aes(x=sex, fill = sex)) + geom_bar(alpha = 0.8) + sc
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
-f <- ggplot(data = daneKNN, aes(x=trt, fill = trt)) + geom_bar(alpha = 0.9) + scale_fill_manual(values = c("lightseagreen","cornsilk3")) +
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+f <- daneKNN %>%
+  count(trt) %>%
+  ggplot() + geom_col(aes(x = trt, y = n, fill = trt))+ geom_label(aes(x = trt, y = n, label = n)) + scale_fill_manual(values = c("lightseagreen","cornsilk3")) +
   theme_minimal() +
   ggtitle('Number of patients by treatment') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -180,9 +184,11 @@ f <- ggplot(data = daneKNN, aes(x=trt, fill = trt)) + geom_bar(alpha = 0.9) + sc
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
-g <- ggplot(data = daneKNN, aes(x=ascites, fill = ascites)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("darkseagreen4","coral3")) +
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+g <- daneKNN %>%
+  count(ascites) %>%
+  ggplot() + geom_col(aes(x = ascites, y = n, fill = ascites))+ geom_label(aes(x = ascites, y = n, label = n)) + scale_fill_manual(values = c("darkseagreen4","coral3")) +
   theme_minimal() +
   ggtitle('Number of patients by ascites presence') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -194,9 +200,11 @@ g <- ggplot(data = daneKNN, aes(x=ascites, fill = ascites)) + geom_bar(alpha = 0
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
-h <- ggplot(data = daneKNN, aes(x=hepato, fill = hepato)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("palegreen4", "indianred3")) +
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+h <- daneKNN %>%
+  count(hepato) %>%
+  ggplot() + geom_col(aes(x = hepato, y = n, fill = hepato))+ geom_label(aes(x = hepato, y = n, label = n)) + scale_fill_manual(values = c("palegreen4", "indianred3")) +
   theme_minimal() +
   ggtitle('Number of patients by hepato presence') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -208,9 +216,11 @@ h <- ggplot(data = daneKNN, aes(x=hepato, fill = hepato)) + geom_bar(alpha = 0.8
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
-e1 <- ggplot(data = daneKNN, aes(x=edema, fill = edema)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("springgreen3","tan3","tomato3")) +
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+e1 <- daneKNN %>%
+  count(edema) %>%
+  ggplot() + geom_col(aes(x = edema, y = n, fill = edema))+ geom_label(aes(x = edema, y = n, label = n)) + scale_fill_manual(values = c("springgreen3","tan3","tomato3")) +
   theme_minimal() +
   ggtitle('Number of patients by edema presence') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -222,9 +232,11 @@ e1 <- ggplot(data = daneKNN, aes(x=edema, fill = edema)) + geom_bar(alpha = 0.8)
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
-f1 <- ggplot(data = daneKNN, aes(x=stage, fill = stage)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) +
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+f1 <- daneKNN %>%
+  count(stage) %>%
+  ggplot() + geom_col(aes(x = stage, y = n, fill = stage))+ geom_label(aes(x = stage, y = n, label = n)) + scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) +
   theme_minimal() +
   ggtitle('Number of patients by stage of disease') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -236,10 +248,11 @@ f1 <- ggplot(data = daneKNN, aes(x=stage, fill = stage)) + geom_bar(alpha = 0.8)
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
+        plot.title = element_text(color="gray26", size=19, family="serif"))
 
-g1 <- ggplot(data = daneKNN, aes(x=spiders, fill = spiders)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("forestgreen", "chocolate3")) +
+g1 <- daneKNN %>%
+  count(spiders) %>%
+  ggplot() + geom_col(aes(x = spiders, y = n, fill = spiders), alpha = 0.7)+ geom_label(aes(x = spiders, y = n, label = n)) + scale_fill_manual(values = c("forestgreen", "chocolate3")) +
   theme_minimal() +
   ggtitle('Number of patients spiders presence') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -251,10 +264,11 @@ g1 <- ggplot(data = daneKNN, aes(x=spiders, fill = spiders)) + geom_bar(alpha = 
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
+        plot.title = element_text(color="gray26", size=19, family="serif"))
 
-h1 <- ggplot(data = daneKNN, aes(x=cens, fill = cens)) + geom_bar(alpha = 0.8) + scale_fill_manual(values = c("coral3","slateblue3")) +
+h1 <- daneKNN %>%
+  count(cens) %>%
+  ggplot() + geom_col(aes(x = cens, y = n, fill = cens), alpha = 0.8)+ geom_label(aes(x = cens, y = n, label = n)) + scale_fill_manual(values = c("coral3","slateblue3")) +
   theme_minimal() +
   ggtitle('Number of patients by cens or event') + 
   theme(axis.title.y = element_text(color="Grey23", size=12),
@@ -266,8 +280,7 @@ h1 <- ggplot(data = daneKNN, aes(x=cens, fill = cens)) + geom_bar(alpha = 0.8) +
         legend.background = element_rect(fill="grey88",
                                          size=0.5, linetype="solid", 
                                          colour ="gray26"),
-        plot.title = element_text(color="gray26", size=19, family="serif")) + 
-  labs(y = "N")
+        plot.title = element_text(color="gray26", size=19, family="serif"))
 
 grid.arrange(e,f)
 grid.arrange(g,h)
@@ -385,6 +398,14 @@ daneKNN %>%
 daneKNN %>%
   group_by(sex) %>%
   summarise(N = n(), Mean = mean(chol), Min = min(chol), Max = max(chol), Sd = sd(chol))
+
+daneKNN %>%
+  group_by(sex) %>%
+  summarise(N = n(), Mean = mean(trig), Min = min(trig), Max = max(trig), Sd = sd(trig))
+
+daneKNN %>%
+  group_by(stage) %>%
+  summarise(N = n(), Mean = mean(trig), Min = min(trig), Max = max(trig), Sd = sd(trig))
 
 
 
@@ -651,7 +672,7 @@ ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneKNN),
   # ocena dopasowania modelu
 
 # estymacja modelu
-Cox <- coxph(Surv(time,cens)~trt+age+sex+ascites+hepato+spiders+bili+chol+albumin+copper+alk.phos+ast+trig+platelet+protime, data = daneKNN)
+Cox <- coxph(Surv(time,cens)~age+sex+ascites+hepato+spiders+bili+chol+albumin+copper+alk.phos+ast+trig+platelet+protime, data = daneKNN)
 summary(Cox)
 #globalny test Walda (p=<2e-16) wskazuje, ze przynajmniej 1 zmienna objasniajaca w modelu statystycznie rozni sie od 0, czyli jest istotna
 #zmienne: trt,sex,ascites,spiders,chol,alk.phos,ast,trig,platelet nie sa statystycznie rozne od 0, bo p-value <0,05
@@ -823,5 +844,6 @@ r2_3 <- coxr2(Cox3) #model po odrzuceniu jednostek odstajacych i wplywowych (uzn
 round(rbind(r2_1$rsq, r2_2$rsq, r2_3$rsq),2)
 
 #wskaznik Briera
-sbrier(Surv(daneKNN_1$time, daneKNN_1$cens), predict(Cox3), btime = 780) #btime moment do ktorego wskaznik jest liczony
+sbrier(Surv(daneKNN_1$time, daneKNN_1$cens), predict(Cox3), btime = 100) #btime moment do ktorego wskaznik jest liczony
 #DLACZEGO WYCHODZI WIEKSZY NIZ 1???? musi byc w przedziale 0-1
+

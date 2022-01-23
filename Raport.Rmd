@@ -1,7 +1,7 @@
 ---
 title: "Survival Analysis on PBC Dataset"
-author: "Kasper Kurzyński"
-date: "13.12.2021"
+author: "Kinga Bielicka, Kasper Kurzyński & Tomasz Warnke"
+date: "22.01.2022"
 output: 
   html_document:
     toc: TRUE
@@ -20,33 +20,1032 @@ knitr::opts_chunk$set(echo = TRUE,
 ```
 
 ![](wellness.jpg)
+***
 
-### Opis problemu i zbioru danych
+## Opis problemu i zbioru danych
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Biblioteki wykorzystane do realizacji projektu:
 
-___
+* survival
+* survminer
+* survMisc
+* dplyr
+* gtools
+* ggplot2
+* corrplot
+* gridExtra
+* extrafont
+* VIM
+* mfp
+* splines
+* CoxR2
+* ipred
+* Rcpp
+* RColorBrewer
+* knitr
+* kableExtra
+* MASS
 
-### Wczytanie zbioru danych i odpowiednich biobliotek
 ```{r}
 library(survival)
+library(survminer)
+library(survMisc)
 library(dplyr)
+library(gtools)
 library(ggplot2)
 library(corrplot)
 library(gridExtra)
+library(extrafont)
+library(VIM)
+library(extrafont)
+library(mfp)
+library(splines)
+library(CoxR2)
+library(ipred)
+library(Rcpp)
+library(RColorBrewer)
+library(knitr)
+library(kableExtra)
+library(MASS)
 data(pbc)
-dane <- pbcseq
+dane <- pbc
+dane$cens <- ifelse(dane$status=="0" | dane$status=="1",0,1)
+dane <- dane[1:312,]
 ```
 
 ___
 
-### Prezentacja danych
+## Prezentacja danych
 ```{r}
 head(dane,10)
 tail(dane,10)
+```
+___
+
+## Ilość braków danych
+```{r}
+NA_count <- colSums(is.na(dane))
+NA_count
+barplot(NA_count)
+```
+___
+
+## Imputacja danych i przekształcanie zmiennych
+```{r}
+daneKNN <- kNN(dane, variable = c("chol", "copper", "trig", "platelet"), k = 5)
+
+daneKNN <- daneKNN[,1:21,drop = F]
+daneKNN$age <- round(daneKNN$age,0)
+levels(daneKNN$sex) <- c(1,0)
+daneKNN$status <- as.factor(daneKNN$status)
+daneKNN$trt <- as.factor(daneKNN$trt)
+daneKNN$ascites <- as.factor(daneKNN$ascites)
+daneKNN$spiders <- as.factor(daneKNN$spiders)
+daneKNN$hepato <- as.factor(daneKNN$hepato)
+daneKNN$stage <- as.factor(daneKNN$stage)
+daneKNN$edema <- as.factor(daneKNN$edema)
+daneKNN$cens <- as.factor(daneKNN$cens)
+
+str(daneKNN)
+summary(daneKNN)
+```
+___
+
+## Graficzna prezentacja danych oraz wybrane statystyki opisowe 
+
+### Rozkłady zmiennych ilościowych 
+
+```{r fig.height=10, fig.width=8}
+a <- ggplot(data = daneKNN, aes(x = age)) + geom_histogram(alpha = 0.7, binwidth = 5, fill="darkorange") + theme_minimal() +
+  ggtitle('Age') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+        labs(y = "N")
+b <- ggplot(data = daneKNN, aes(x = bili)) + geom_histogram(alpha = 0.7, binwidth = 2, fill="mediumpurple3") + theme_minimal() +
+  ggtitle('Bilirunbin') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+c <- ggplot(data = daneKNN, aes(x = chol)) + geom_histogram(alpha = 0.7, binwidth = 50, fill="seagreen4") + theme_minimal() +
+  ggtitle('Cholesterol') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+d <- ggplot(data = daneKNN, aes(x = albumin)) + geom_histogram(alpha = 0.7, binwidth = 0.2, fill="dodgerblue3") + theme_minimal() +
+  ggtitle('Albumin') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+a1 <- ggplot(data = daneKNN, aes(x = copper)) + geom_histogram(alpha = 0.7, binwidth = 30, fill="indianred4") + theme_minimal() +
+  ggtitle('Copper') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "N")
+b1 <- ggplot(data = daneKNN, aes(x = alk.phos)) + geom_histogram(alpha = 0.7, binwidth = 400, fill="royalblue3") + theme_minimal() +
+  ggtitle('Alkaline phos.') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+c1 <- ggplot(data = daneKNN, aes(x = ast)) + geom_histogram(alpha = 0.7, binwidth = 20, fill="goldenrod2") + theme_minimal() +
+  ggtitle('Aspartate amino.') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+d1 <- ggplot(data = daneKNN, aes(x = trig)) + geom_histogram(alpha = 0.7, binwidth = 20, fill="cadetblue3") + theme_minimal() +
+  ggtitle('Triglycerides') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+a2 <- ggplot(data = daneKNN, aes(x = platelet)) + geom_histogram(alpha = 0.7, binwidth = 25, fill="orangered3") + theme_minimal() +
+  ggtitle('Platelet') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+b2 <- ggplot(data = daneKNN, aes(x = protime)) + geom_histogram(alpha = 0.7, binwidth = 0.5, fill="darkolivegreen4") + theme_minimal() +
+  ggtitle('Protime') + 
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+c2 <- ggplot(data = daneKNN, aes(x = time, fill = cens)) + geom_histogram(alpha = 0.7, binwidth = 200) + facet_grid(~cens) + theme_minimal() +
+  ggtitle('Time for cens & event') + 
+  scale_fill_manual(values = c("coral3","slateblue3")) +
+  theme(axis.title.y = element_text(color="Grey23", size=11),
+        axis.text.y = element_text(size=9),
+        axis.title.x = element_blank(),
+        plot.title = element_text(color="gray26", size=20, family="serif")) +
+  labs(y = "N")
+
+grid.arrange(a,b,c,d)
+grid.arrange(a1,b1,c1,d1)
+grid.arrange(a2,b2)
+c2
+```
+
+### Rozkłady zmiennych jakościowych 
+```{r fig.height=10, fig.width=8}
+e <- daneKNN %>%
+  count(sex) %>%
+  ggplot() + geom_col(aes(x = sex, y = n, fill = sex), alpha = 0.7)+ geom_label(aes(x = sex, y = n, label = n)) + scale_fill_manual(values = c("navajowhite3","plum4")) +
+  theme_minimal() +
+  ggtitle('Number of patients by gender') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+f <- daneKNN %>%
+  count(trt) %>%
+  ggplot() + geom_col(aes(x = trt, y = n, fill = trt), alpha = 0.7)+ geom_label(aes(x = trt, y = n, label = n)) + scale_fill_manual(values = c("lightseagreen","cornsilk3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by treatment') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+g <- daneKNN %>%
+  count(ascites) %>%
+  ggplot() + geom_col(aes(x = ascites, y = n, fill = ascites), alpha = 0.7)+ geom_label(aes(x = ascites, y = n, label = n)) + scale_fill_manual(values = c("darkseagreen4","coral3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by ascites presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+h <- daneKNN %>%
+  count(hepato) %>%
+  ggplot() + geom_col(aes(x = hepato, y = n, fill = hepato), alpha = 0.7)+ geom_label(aes(x = hepato, y = n, label = n)) + scale_fill_manual(values = c("palegreen4", "indianred3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by hepato presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+e1 <- daneKNN %>%
+  count(edema) %>%
+  ggplot() + geom_col(aes(x = edema, y = n, fill = edema), alpha = 0.7)+ geom_label(aes(x = edema, y = n, label = n)) + scale_fill_manual(values = c("springgreen3","tan3","tomato3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by edema presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+f1 <- daneKNN %>%
+  count(stage) %>%
+  ggplot() + geom_col(aes(x = stage, y = n, fill = stage), alpha = 0.7)+ geom_label(aes(x = stage, y = n, label = n)) + scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by stage of disease') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+g1 <- daneKNN %>%
+  count(spiders) %>%
+  ggplot() + geom_col(aes(x = spiders, y = n, fill = spiders), alpha = 0.7)+ geom_label(aes(x = spiders, y = n, label = n)) + scale_fill_manual(values = c("forestgreen", "chocolate3")) +
+  theme_minimal() +
+  ggtitle('Number of patients spiders presence') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+h1 <- daneKNN %>%
+  count(cens) %>%
+  ggplot() + geom_col(aes(x = cens, y = n, fill = cens), alpha = 0.7)+ geom_label(aes(x = cens, y = n, label = n)) + scale_fill_manual(values = c("coral3","slateblue3")) +
+  theme_minimal() +
+  ggtitle('Number of patients by cens or event') + 
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=19, family="serif"))
+
+grid.arrange(e,f)
+grid.arrange(g,h)
+grid.arrange(e1,f1)
+grid.arrange(g1,h1)
+```
+
+### Rozkłady pokazujące wybrane zależności
+```{r fig.height=10, fig.width=8}
+z <- ggplot(daneKNN, aes(x=stage, y = age, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
+  ggtitle("Age by stage") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Age")
+
+x <- ggplot(daneKNN, aes(x=stage, y = bili, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
+  ggtitle("Bilirunbin by stage") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Bilirunbin")
+z1 <- ggplot(daneKNN, aes(x=stage, y = time, fill=stage)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen3", "skyblue3","salmon3","brown3")) + theme_minimal() +
+  ggtitle("Time by stage") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Time") + facet_grid(~cens)
+x1 <- ggplot(daneKNN, aes(x=ascites, y = bili, fill=ascites)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("darkseagreen4","coral3")) + theme_minimal() +
+  ggtitle("Bilirunbin by ascites presence") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Bilirunbin")
+
+x2 <- ggplot(daneKNN, aes(x=hepato, y = bili, fill=hepato)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen4", "indianred3")) + theme_minimal() +
+  ggtitle("Bilirunbin by hepato presence") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Bilirunbin")
+
+z2 <- ggplot(daneKNN, aes(x=hepato, y = copper, fill=hepato)) + geom_boxplot(size=1.2, alpha=0.5) +
+  scale_fill_manual(values = c("palegreen4", "indianred3")) + theme_minimal() +
+  ggtitle("Copper by hepato presence") +
+  theme(axis.title.y = element_text(color="Grey23", size=12),
+        axis.title.x=element_blank(),
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=8),
+        legend.position = "right",
+        legend.justification = c(0.94,0.94),
+        legend.background = element_rect(fill="grey88",
+                                         size=0.5, linetype="solid", 
+                                         colour ="gray26"),
+        plot.title = element_text(color="gray26", size=18, family="serif")) +
+  labs(y = "Copper")
+
+grid.arrange(z,x)
+grid.arrange(z1,x1)
+grid.arrange(z2,x2)
+```
+
+### Statystyki względem grup
+
+##### Statystyki dla wieku względem płci
+```{r}
+tab1 <- daneKNN %>%
+  group_by(sex) %>%
+  summarise(N = n(), Mean = round(mean(age),2), Min = min(age), Max = max(age), Sd = round(sd(age),2))
+  
+tab1 %>%
+  kbl() %>%
+  kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
+```
+##### Statystyki dla bilirunbiny względem obecności edemy
+```{r}
+tab2 <- daneKNN %>%
+  group_by(edema) %>%
+  summarise(N = n(), Mean = round(mean(bili),2), Min = min(bili), Max = max(bili), Sd = round(sd(bili),2))
+
+tab2 %>%
+  kbl() %>%
+  kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
+```
+
+##### Statystyki dla bilirunbiny względem stopnia rozwoju choroby
+```{r}
+tab3 <- daneKNN %>%
+  group_by(stage) %>%
+  summarise(N = n(), Mean = round(mean(bili),2), Min = min(bili), Max = max(bili), Sd = round(sd(bili),2))
+
+tab3 %>%
+  kbl() %>%
+  kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
+```
+
+##### Statystyki dla poziomu cholesterolu względem płci
+```{r}
+tab4 <- daneKNN %>%
+  group_by(sex) %>%
+  summarise(N = n(), Mean = round(mean(chol),2), Min = min(chol), Max = max(chol), Sd = round(sd(chol),2))
+
+tab4 %>%
+  kbl() %>%
+  kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
+```
+Tu będzie tekst
+
+##### Statystyki ilości trójglicerydów względem płci
+```{r}
+tab5 <- daneKNN %>%
+  group_by(sex) %>%
+  summarise(N = n(), Mean = round(mean(trig),2), Min = min(trig), Max = max(trig), Sd = round(sd(trig),2))
+
+tab5 %>%
+  kbl() %>%
+  kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
+```
+##### Statystyki ilości trójglicerydów względem stopnia rozwoju choroby
+```{r}
+tab6 <- daneKNN %>%
+  group_by(stage) %>%
+  summarise(N = n(), Mean = round(mean(trig),2), Min = min(trig), Max = max(trig), Sd = round(sd(trig),2))
+
+tab6 %>%
+  kbl() %>%
+  kable_styling(full_width = T, html_font = "Cambria", fixed_thead = T, font_size = 16)
+```
+### Wykres pokazujący korelacje pomiędzy zmiennymi ilościowymi
+```{r, fig.width=11}
+doKor <- daneKNN[,c(5, 12,13,14,15,16,17,18,19)]
+corMat <- cor(doKor)
+#corrplot(corMat,method="number", tl.col = 'black')
+corrplot(corMat, method = 'color',addCoef.col = 'black', order = 'AOE', tl.col = 'black', col=brewer.pal(n=10, name="PuOr"))
+```
+
+___
+
+## Estymator Kaplana - Meiera
+```{r}
+daneKNN$cens <- as.character(daneKNN$cens)
+daneKNN$cens <- as.numeric(daneKNN$cens)
+Surv(daneKNN$time, daneKNN$cens)
+```
+
+```{r fig.height=9, fig.width=14}
+daneKNN$cens <- as.character(daneKNN$cens)
+daneKNN$cens <- as.numeric(daneKNN$cens)
+pbcKM <- survfit(Surv(time, cens) ~ 1, conf.type="plain", data=daneKNN) #KM
+pbcKM1 <- survfit(Surv(time, cens) ~ 1, conf.type="log", data=daneKNN)
+pbcNELS=survfit(Surv(time,cens) ~ 1, conf.type ="plain", type="fleming-harrington",data=daneKNN)
+
+splots <- list()
+splots[[1]] <- ggsurvplot(
+  fit = pbcKM, 
+  xlab = "Days", 
+  ylab = "Overall survival probability with Kaplan - Meier estimator and plain confidence interval")
+splots[[2]] <- ggsurvplot(
+  fit = pbcKM1, 
+  xlab = "Days", 
+  ylab = "Overall survival probability with with Kaplan - Meier estimator and log confidence interval",
+  palette = "blue")
+splots[[3]] <- ggsurvplot(
+  fit = pbcNELS, 
+  xlab = "Days", 
+  ylab = "Overall survival probability with Nelson - Aelen estimator",
+  palette = "limegreen")
+
+arrange_ggsurvplots(splots, print = TRUE,
+  ncol = 3, nrow = 1)
+
+summary(pbcKM)$table
+summary(pbcKM1)$table
+summary(pbcNELS)$table
+```
+```{r, echo = TRUE}
+daneKNN$Age_cat=quantcut(daneKNN$age,q=4)
+daneKNN$bili_cat=quantcut(daneKNN$bili,q=4)
+daneKNN$chol_cat=quantcut(daneKNN$chol,q=4)
+daneKNN$albumin_cat=quantcut(daneKNN$albumin,q=4)
+daneKNN$copper_cat=quantcut(daneKNN$copper,q=4)
+daneKNN$alk_cat=quantcut(daneKNN$alk.phos,q=4)
+daneKNN$ast_cat=quantcut(daneKNN$ast,q=4)
+daneKNN$trig_cat=quantcut(daneKNN$trig,q=4)
+daneKNN$plat_cat=quantcut(daneKNN$platelet,q=4)
+daneKNN$pro_cat=quantcut(daneKNN$protime,q=4)
+```
+___
+
+## Rozkłady czasu trwania dla grup
+```{r fig.height=10, fig.width=12}
+
+groupSplots1 <- list()
+groupSplots1[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ sex, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("navajowhite3","plum4"))
+groupSplots1[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ trt, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("lightseagreen","cornsilk3"))
+
+arrange_ggsurvplots(groupSplots1, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmsex <- survfit(Surv(time, cens) ~ sex, data = daneKNN)
+summary(kmsex)$table
+
+kmtrt <- survfit(Surv(time, cens) ~ trt, data = daneKNN)
+summary(kmtrt)$table
 
 ```
 
+```{r fig.height=10, fig.width=12}
+groupSplots2 <- list()
+groupSplots2[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ ascites, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("darkseagreen4","coral3"))
+groupSplots2[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ spiders, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("forestgreen", "chocolate3"))
 
+arrange_ggsurvplots(groupSplots2, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmascites <- survfit(Surv(time, cens) ~ ascites, data = daneKNN)
+summary(kmascites)$table
+
+kmspiders <- survfit(Surv(time, cens) ~ spiders, data = daneKNN)
+summary(kmspiders)$table
+```
+
+```{r fig.height=10, fig.width=12}
+groupSplots3 <- list()
+groupSplots3[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ hepato, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("palegreen4", "indianred3"))
+groupSplots3[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ edema, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("springgreen3","tan3","tomato3"))
+
+arrange_ggsurvplots(groupSplots3, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+
+kmhepato <- survfit(Surv(time, cens) ~ hepato, data = daneKNN)
+summary(kmhepato)$table
+
+kmedema <- survfit(Surv(time, cens) ~ edema, data = daneKNN)
+summary(kmedema)$table
+```
+```{r fig.height=10, fig.width=10}
+ggsurvplot(survfit(Surv(time, cens) ~ stage, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_bw(),
+           palette = c("palegreen3", "skyblue3","salmon3","brown3"))
+kmstage <- survfit(Surv(time, cens) ~ stage, data = daneKNN)
+summary(kmstage)$table
+```
+
+```{r fig.height=10, fig.width=15}
+groupSplots4 <- list()
+groupSplots4[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ trig_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_minimal(),
+           palette = c("peachpuff3","lightgreen", "paleturquoise4", "orchid4"))
+groupSplots4[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ Age_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_gray(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+arrange_ggsurvplots(groupSplots4, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+
+```{r fig.height=10, fig.width=14}
+groupSplots5 <- list()
+groupSplots5[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_minimal(),
+           palette = c("peachpuff3","lightgreen", "paleturquoise4", "orchid4"))
+groupSplots5[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ chol_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_gray(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+arrange_ggsurvplots(groupSplots5, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+
+```{r fig.height=10, fig.width=14}
+groupSplots6 <- list()
+groupSplots6[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ albumin_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_minimal(),
+           palette = c("peachpuff3","lightgreen", "paleturquoise4", "orchid4"))
+groupSplots6[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ copper_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_gray(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+arrange_ggsurvplots(groupSplots6, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+
+```{r fig.height=10, fig.width=12}
+groupSplots7 <- list()
+groupSplots7[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ alk_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_minimal(),
+           palette = c("peachpuff3","lightgreen", "paleturquoise4", "orchid4"))
+groupSplots7[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ ast_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_gray(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+arrange_ggsurvplots(groupSplots7, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+
+```{r fig.height=10, fig.width=16}
+groupSplots8 <- list()
+groupSplots8[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ plat_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata", 
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_minimal(),
+           palette = c("peachpuff3","lightgreen", "paleturquoise4", "orchid4"))
+groupSplots8[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ pro_cat, data = daneKNN),
+           pval = TRUE, conf.int = TRUE,
+           risk.table = TRUE,
+           risk.table.col = "strata",
+           linetype = "strata",
+           surv.median.line = "hv", 
+           ggtheme = theme_gray(),
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"))
+
+
+arrange_ggsurvplots(groupSplots8, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+___
+
+## Graficzna prezentacjia funkcji skumulowanego hazardu dla wybranych zmiennych
+
+### Zmienne sex oraz stage
+```{r fig.height=10, fig.width=16}
+groupHplots <- list()
+groupHplots[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ sex, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_gray(), 
+           palette = c("navajowhite3","plum4"),
+           fun = "cumhaz")
+groupHplots[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ stage, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_minimal(), 
+           palette = c("palegreen3", "skyblue3","salmon3","brown3"),
+           fun = "cumhaz")
+
+
+arrange_ggsurvplots(groupHplots, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+
+### Zmienne hepato oraz skategoryzowana zmienna trig
+```{r fig.height=10, fig.width=16}
+groupHplots <- list()
+groupHplots[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ hepato, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_gray(), 
+           palette = c("palegreen4", "indianred3"),
+           fun = "cumhaz")
+groupHplots[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ trig_cat, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_minimal(), 
+           palette = c("peachpuff3","lightgreen", "paleturquoise4", "orchid4"),
+           fun = "cumhaz")
+
+
+arrange_ggsurvplots(groupHplots, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+
+### Skategoryzowane zmienne bili i copper
+
+test
+
+```{r fig.height=10, fig.width=16}
+groupHplots <- list()
+groupHplots[[1]] <- ggsurvplot(survfit(Surv(time, cens) ~ copper_cat, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_gray(), 
+           palette = c("wheat3","seagreen3", "slateblue2", "sienna3"),
+           fun = "cumhaz")
+groupHplots[[2]] <- ggsurvplot(survfit(Surv(time, cens) ~ bili_cat, data = daneKNN),
+           conf.int = TRUE,
+           risk.table.col = "strata",
+           ggtheme = theme_minimal(), 
+           palette = c("peachpuff3","lightgreen", "paleturquoise4", "orchid4"),
+           fun = "cumhaz")
+
+
+arrange_ggsurvplots(groupHplots, print = TRUE,
+  ncol = 2, nrow = 1, risk.table.height = 0.2)
+```
+___
+
+## Model PH Coxa
+
+* Zbuduj model PH Coxa. Uwzględnij następujące zagadnienia:
+  + interpretacja uzyskanych oszacowań parametrów modelu
+  + weryfikacja założeń modelu (proporcjonalność hazardów)
+  + wybór postaci funkcji zmiennych objaśniających
+  + selekcja zmiennych do modelu
+  + reszty w modelu
+  + wybór najlepszego modelu
+  + ocena dopasowania modelu
+
+### Estymacja modelu
+```{r}  
+Cox <- coxph(Surv(time,cens)~age+sex+ascites+hepato+spiders+bili+chol+albumin+copper+alk.phos+ast+trig+platelet+protime, data = daneKNN)
+summary(Cox)  
+```
+
+### Zastosowanie funkcji krokowej, która poszukuje modelu najbardziej zoptymalizowanego ze wzgledu na kryterium akaike AIC (tu - metoda wsteczna)
+
+W wyniku tej procedury otrzymano model z 7 zmiennymi objasniajacymi: age,hepato,bili,albumin,copper,ast,protime. Według kryterium AIC zmienna ast mimo p-value < **0,06** powinna znalezc sie w modelu. Pozostałe zmienne na poziomie istotnosci 0,05 sa statystycznie rozne od 0 (czyli istotne), ponieważ **p-value < 0,05**.
+```{r}  
+stepAIC(Cox,direction="backward")
+``` 
+
+### Estymacja nowego modelu Coxa po odrzuceniu zmiennych nieistotnych statystycznie
+
+* INTERPRETACJA PARAMETROW: 
+  + jezeli wiek wzrosnie o rok, hazard (ryzyko) zgonu rośnie o **3,3%** u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o **66,2%** wyzszy niz pacjenci z hepato = 0 ceteris paribus
+  + wraz ze wzrostem bili o 1, hazard (ryzyko) zgonu rosnie o **8,9%** ceteris paribus
+  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **67%**, ceteris paribus
+  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o **0,3%** ceteris paribus
+  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o **0,4%** ceteris paribus
+  + wraz ze wzrostem protime o 1, hazard (ryzyko) zgonu rosnie o **38,0%** ceteris paribus
+  
+```{r}  
+Cox1 <- coxph(Surv(time,cens)~age+hepato+bili+albumin+copper+ast+protime, data = daneKNN)
+summary(Cox1)  
+``` 
+
+### Weryfikacja założenia proporcjonalności
+
+Jeżeli p > 0,05 to zostaly spełnione zalożenia proporcjalosci. Dla zmiennych: bili oraz protime te założenia nie zostały spełnione, więc należy usunąć te zmienne z modelu.
+```{r, fig.height=12, fig.width=9}  
+Prop <- cox.zph(Cox1, transform = 'km')
+print(Prop)
+par(mfrow=c(4,2))
+plot(Prop)  
+``` 
+### Estymacja modelu z wykorzystaniem tylko istotnych zmiennych
+```{r}  
+Cox2 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN)
+summary(Cox2) 
+``` 
+
+### Graficzna weryfikacja założenia proporcjonalności
+```{r, fig.height=12, fig.width=12}
+reszty <- resid(Cox1, type="scaledsch") 
+Time <- as.numeric(rownames(reszty))
+zmienne <- names(daneKNN[,c(5,8,11,13,14,16,19)])
+
+par(mfrow = c(3,3))
+for (i in 1:7) {
+  plot(log(Time), reszty[,i], xlab="ln(Czas)", main=zmienne[i],
+       ylab="Skalowane reszty Schoenfelda", pch=20, cex=0.7)
+  lines(smooth.spline(log(Time), reszty[,i] ), lwd=3 )
+}
+```
+### Identyfikacja jednostek odstających
+
+W zbiorze znajduje się jedna jednostką odstająca.
+```{r}
+deviance <- residuals(Cox2,type="deviance")
+s <- Cox2$linear.predictors
+plot(s,deviance,xlab="Liniowy predyktor",ylab="Reszty odchylen",cex=0.5, pch=20)
+abline(h=c(3,-3),lty=3)
+daneKNN$deviance <- deviance
+c1 <- which(daneKNN$deviance < c(-3))
+```
+### Jednostki wpływowe
+
+* INTERPRETACJA PARAMETROW: 
+  + jezeli wiek wzrosnie o 1rok, hazard (ryzyko) zgonu rośnie o 4,9% u osob bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostalych wartosciach zmiennych takich samych)
+  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) maja hazard (ryzyko) zgonu o 100,5% wyzszy niz pacjenci z hepato = 0 ceteris paribus
+  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu ?
+  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o 0,6% ceteris paribus
+  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rosnie o 0,8% ceteris paribus
+```{r}
+dfb <- residuals(Cox2,type="dfbeta")
+n <- dim(dfb)[1]
+obs.nr <- c(1:n)
+par(mfrow = c(2,3))
+for (j in 1:5) {
+  plot(obs.nr,dfb[,j],xlab="Numer jednostki",ylab="Przyrost oceny parametru",
+       main=zmienne[j])
+}
+
+a1 <- which(abs(dfb[,1])>(0.004)) #usunac te jednostki
+a2 <- which(abs(dfb[,2])>(0.06))
+a3 <- which(abs(dfb[,3])>(0.1))
+a4 <- which(abs(dfb[,4])>(0.0004))
+a5 <- which(abs(dfb[,5])>(0.001))
+
+c <- sort(unique(c(a1,a2,a3,a4,a5,c1)))
+daneKNN_1 <- daneKNN[-c,] #zredukowany zbior
+
+Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
+summary(Cox3)
+stepAIC(Cox3,direction="backward")
+```
+### Reszty martyngałowe dla zmiennej **age**
+```{r, fig.height=7, fig.width=7}
+zmn1 <- daneKNN_1$age
+lab1 <- "Age (years)"
+reszty1 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn1, reszty1, xlab=lab1,ylab="Martingale residuals",cex=0.6)
+lines(lowess(zmn1, reszty1,delta=1),lwd=2)
+```
+
+
+### Reszty martyngałowe dla zmiennej **albumin**
+```{r, fig.height=7, fig.width=7}
+zmn2 <- daneKNN_1$albumin
+lab2 <- "albumin"
+reszty2 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn2, reszty2, xlab=lab2,ylab="Reszty martynga?owe",cex=0.6)
+lines(lowess(zmn2, reszty2,delta=1),lwd=2)
+```
+
+
+### Reszty martyngałowe dla zmiennej **copper**
+```{r, fig.height=7, fig.width=7}
+zmn3 <- daneKNN_1$copper
+lab3 <- "copper"
+reszty3 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn3, reszty3, xlab=lab3,ylab="Reszty martynga?owe",cex=0.6)
+lines(lowess(zmn3, reszty3,delta=1),lwd=2)
+```
+
+
+### Reszty martyngałowe dla zmiennej **ast**
+```{r, fig.height=7, fig.width=7}
+zmn4 <- daneKNN_1$ast
+lab4 <- "ast"
+reszty4 <- resid(coxph(Surv(time,cens)~1,data=daneKNN_1),type="martingale")
+plot(zmn4, reszty4, xlab=lab4,ylab="Reszty martynga?owe",cex=0.6)
+lines(lowess(zmn4, reszty4,delta=1),lwd=2)
+```
+### Transformacja zmiennej **copper**
+```{r}
+Cox4 <- coxph(Surv(time, cens)~zmn3,data=daneKNN_1)
+A1 <- round(AIC(Cox3),2) #akaike z modelu coxa
+A1
+cutpoint <- cutp(Cox4)$zmn3 ## optymalny punkt odciecia
+c <- (zmn3>=cutpoint$zmn3[1])*1+0 #jezeli zmienna jest >= punkotwi odciecia to przypisuje 1 w przeciwnym wypadku 0
+
+Cox5 <- coxph(Surv(time, cens)~c,data=daneKNN_1)
+A2 <- round(AIC(Cox5),2)
+A2
+```
+### Zastosowanie wielomianów ułamkowych
+```{r}
+m3 <- mfp(Surv(time,cens)~ fp(zmn3, df = 4, select = 0.05),family=cox, data=daneKNN_1) ## wielomiany ulamkowe
+m3
+A3 <- round(AIC(m3))
+A3
+```
+
+### Metoda wielomianowej funkcji sklejanej (splajn)
+```{r}
+int <- quantile(na.omit(zmn3),probs=c(0.05,0.275,.5,.725,.95))
+Cox6 <- coxph(Surv(time,cens)~ns(zmn3,knots=int),data=daneKNN_1)
+pred <- predict(Cox6,type="terms",se.fit=TRUE, terms=1)
+plot(na.omit(zmn3),exp(pred$fit),type="n",xlab=lab3,ylim=c(0,2.5),
+     ylab="Hazard względny")
+lines(smooth.spline(na.omit(zmn3),exp(pred$fit+1.96*pred$se.fit)),lty=2)
+lines(smooth.spline(na.omit(zmn3),exp(pred$fit-1.96*pred$se.fit)),lty=2)
+lines(smooth.spline(na.omit(zmn3),exp(pred$fit)),lty=1)
+abline(h=1,lty=3)
+legend('topright',2,c("splajn","95% przedzial ufnosci"), lty=1:2, box.lty=0)
+A4 <- round(AIC(Cox6),2)
+A4
+```
+
+### PODSUMOWANIE TRANSFORMACJI ZMIENNEJ copper
+
+Mimo wszystko najlepszym modelem jest model bez transformacji zmiennej copper, czyli:
+```{r}
+rbind(A1,A2,A3,A4)
+Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
+summary(Cox3)
+```
+
+### MIARY DOPASOWANIA
+```{r}
+r2_1 <- coxr2(Cox1) #model otrzymany metoda krokowa przed sprawdzeniem zalozen proporcjonalnosci
+r2_2 <- coxr2(Cox2) #model po odrzuceniu zmiennych niespelniajacych zalozen proporcjonalnosci
+r2_3 <- coxr2(Cox3) #model po odrzuceniu jednostek odstajacych i wplywowych (uznany za najlepszy)
+round(rbind(r2_1$rsq, r2_2$rsq, r2_3$rsq),2)
+```
