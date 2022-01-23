@@ -863,7 +863,7 @@ A4 <- round(AIC(Cox6),2)
 A4
 
 #PODSUMOWANIE TRANSFORMACJI ZMIENNEJ copper
-rbind(A1,A2,A3,A4)
+rbind(A1,A2,A3,A4) #A1 - model bez transformacji, A2 - po dychotomizacji, A3 - wielomiany ulamkowe , A4 - splajn
 #mimo wszystko najlepszym modelem jest model bez transformacji zmiennej copper, czyli:
 Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
 summary(Cox3)
