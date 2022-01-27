@@ -226,7 +226,7 @@ c2 <- ggplot(data = daneKNN, aes(x = time, fill = cens)) + geom_histogram(alpha 
 
 #### **Rozkład zmiennych age, bili, chol i albumin**
 
-W przypadku zmiennej dotyczącej wieku, najniższą wartością jest **26**, najwyższą zaś **78**. Średni wiek badanych osób to 50 lat i wokół tej wartości skupia się większość obserwacji.
+W przypadku zmiennej dotyczącej wieku, najniższą wartością jest **26**, najwyższą zaś **78**. Średni wiek badanych osób to **50** lat i wokół tej wartości skupia się większość obserwacji.
 Poziom bilirubiny w normie waha się od **0,2 mg/dl** do **1,1 mg/dl** i w przypadku połowy obserwacji jej wartości nie przekraczają **1,35 mg/dl**. Natomiast obserwacja, u której występuje najwyższa wartość bilirubiny to aż **28 mg/dl**.
 Podobnie jest w przypadku cholesterolu, którego norma powinna wynosić mniej niż **200 mg/dl**. Pomimo że rozkład zmiennej charakteryzuje się silną asymetrią prawostronną, to u większości jednostek cholesterol przekracza zakładaną normę, bowiem wartość pierwszego kwartyla to już **252 mg/dl**. Wartość maksymalna przekracza normę niemal dziewięciokrotnie (**1775 mg/dl**). Zmienna albumin posiada rozkład lewostronny, choć w jego przypadku asymetria nie jest duża.
 ```{r fig.height=10, fig.width=8}
