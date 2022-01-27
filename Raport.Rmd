@@ -21,6 +21,9 @@ knitr::opts_chunk$set(echo = TRUE,
 
 ![](wellness.jpg)
 
+## **Wstęp**
+
+
 W niniejszej analizie wykorzystano zbiór danych *pbc* z pakietu *Survival*. Badany jest wpływ poszczególnych zmiennych, takich jak m.in. wiek, stadium choroby czy związane z badanym schorzeniem symptomy na przeżycie osób cierpiących na pierwotne stwardniające zapalenie dróg żółciowych. Pierwotne stwardniające zapalenie dróg żółciowych (ang. *primary sclerosing cholangitis*) jest chorobą autoimmunologiczną prowadzącą do wyniszczenia dróg żółciowych w wątrobie. Rozwój choroby jest powolny, lecz nieunikniony, prowadzący do marskości, a nawet wyniszczenia wątroby. Dane pochodzą z badania w Mayo Clinic przeprowadzonego w latach 1974-1984. Jednostką badania jest zbiorowość 424 pacjentów chorujących na PBC skierowanych na badanie pomiędzy 1974 a 1984 rokiem. W analizie przeżycia pod uwagę wzięto tylko pierwsze 312 przypadków, dla których dane są najbardziej kompletne. Zbiór *pbc* zawiera takie zmienne jak:
 
 * **Id** – numer pacjenta
@@ -44,7 +47,7 @@ W niniejszej analizie wykorzystano zbiór danych *pbc* z pakietu *Survival*. Bad
 * **Trt** – zmienna oznaczająca czy dany pacjent został poddany działaniu leku D-penicillmain lub placebo. „1” zostali oznaczeni pacjenci, którym został podany lek, natomiast „2” pacjenci, którzy otrzymali placebo. 
 * **Trig** – ilość trójglicerydów w organizmie. Trójglicerydy to tłuszcze proste i złożone, które są wykorzystywane jako budulec tkanki tłuszczowej i źródło energii. Ich podwyższony poziom może oznaczać między innymi stłuszczenie wątroby. Prawidłowy poziom trójglicerydów powinien wynosić poniżej 150 mg/dl.
 
-  Celem badania jest wyodrębnienie czynników wpływających na przeżywalność osób cierpiących na pierwotne stwardniające zapalenie dróg żółciowych.
+Celem badania jest wyodrębnienie czynników wpływających na przeżywalność osób cierpiących na pierwotne stwardniające zapalenie dróg żółciowych.
 
 Biblioteki wykorzystane do realizacji projektu:
 
@@ -104,6 +107,7 @@ ___
 head(dane,10)
 tail(dane,10)
 ```
+
 ___
 
 ## **Ilość braków danych**
@@ -114,6 +118,7 @@ NA_count <- colSums(is.na(dane))
 NA_count
 barplot(NA_count)
 ```
+
 ___
 
 ## **Imputacja danych i przekształcanie zmiennych**
@@ -528,7 +533,7 @@ grid.arrange(z1,x1)
 
 #### **Wykresy pudełkowe przedstawiające zależności pomiędzy zmienną copper i hepato oraz bili i hepato**
 
-Podobna ależność występuje w przypadku związku ilości miedzi w moczu, a występowaniem powiększenia wątroby. Analogicznie jest również w przypadku zależności pomiędzy stężeniem barwnika żółciowego, a występowaniem powiększenia wątroby.
+Podobna zależność występuje w przypadku związku ilości miedzi w moczu, a występowaniem powiększenia wątroby. Analogicznie jest również w przypadku zależności pomiędzy stężeniem barwnika żółciowego, a występowaniem powiększenia wątroby.
 ```{r fig.height=10, fig.width=8}
 grid.arrange(z2,x2)
 ```
@@ -602,7 +607,7 @@ tab5 %>%
 
 ##### **Statystyki ilości trójglicerydów względem stopnia rozwoju choroby**
 
-Średnie stężenie trójglicerydów we krwi rośnie również wraz ze stadium rozwoju choroby, choć w średnia w stadium III jest ona nieco niższa niż w stadium IV.
+Średnie stężenie trójglicerydów we krwi rośnie również wraz ze stadium rozwoju choroby, choć średnia w III stadium jest nieco wyższa niż w stadium IV.
 ```{r}
 tab6 <- daneKNN %>%
   group_by(stage) %>%
@@ -1047,18 +1052,18 @@ ___
 Modele regresji dla wybranych fukncji zmiennej losowej T, mają za zadanie pokazać relację między analizowaną funkcją, definiujacą rozkład zmiennej losowej T, a zbiorem zmiennych charakteryzujących jednostki należące do badanej populacji. W analizie przeżycia najczęściej modelowanymi funkcjami są funkcja hazardu, funkcja trwania, a czasami także dystrybuanta. W modelu zaproponowanych przez Coxa [1972], funkcja hazardu bazowego szacowana jest nieparametrycznie dla momentów tk, w których wystąpiło zdarzenie, czyli jest to model semiparametryczny. Model Coxa nazywany jest modelem proporcjonalnych hazardów (PH), co oznacza, że dla dwóch jednostek z wektorami zmiennych x i x*, iloraz ich hazardów nie zależy od czasu t.
 
 * Zbudowanie modelu PH Coxa będzie zawierało następujące zagadnienia:
-  + interpretacja uzyskanych oszacowań parametrów modelu
-  + weryfikacja założeń modelu (proporcjonalność hazardów)
-  + wybór postaci funkcji zmiennych objaśniających
-  + selekcja zmiennych do modelu
-  + reszty w modelu
-  + wybór najlepszego modelu
-  + ocena dopasowania modelu
+  + interpretacja uzyskanych oszacowań parametrów modelu,
+  + weryfikacja założeń modelu (proporcjonalność hazardów),
+  + wybór postaci funkcji zmiennych objaśniających,
+  + selekcja zmiennych do modelu,
+  + reszty w modelu,
+  + wybór najlepszego modelu,
+  + ocena dopasowania modelu.
 
 ### **Estymacja modelu**
 
-Globalny test Walda **(p=<2e-16)** wskazuje, ze przynajmniej 1 zmienna objasniajaca w modelu statystycznie rozni sie od 0, czyli jest istotna
-Zmienne: sex,ascites,spiders,chol,alk.phos,ast,trig,platelet nie sa statystycznie rozne od 0, bo **p-value < 0,05**.
+Globalny test Walda **(p=<2e-16)** wskazuje, że przynajmniej 1 zmienna objaśniająca w modelu statystycznie różni sie od 0, czyli jest istotna statystycznie.
+Zmienne: sex, ascites, spiders, chol, alk.phos, ast, trig oraz platelet nie sa różne od 0, bo **p-value > 0,05**.
 ```{r}  
 Cox <- coxph(Surv(time,cens)~age+sex+ascites+hepato+spiders+bili+chol+albumin+copper+alk.phos+ast+trig+platelet+protime, data = daneKNN)
 summary(Cox)  
@@ -1074,13 +1079,13 @@ stepAIC(Cox,direction="backward")
 ### **Estymacja nowego modelu Coxa po odrzuceniu zmiennych nieistotnych statystycznie**
 
 * INTERPRETACJA PARAMETROW: 
-  + jeżeli wiek wzrośnie o rok, hazard (ryzyko) zgonu rośnie o **3,3%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus
-  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) mają hazard (ryzyko) zgonu o **66,2%** wyższy niż pacjenci z hepato = 0, ceteris paribus
-  + wraz ze wzrostem bili o 1, hazard (ryzyko) zgonu rosnie o **8,9%**, ceteris paribus
-  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **67%**, ceteris paribus
-  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rosnie o **0,3%**, ceteris paribus
-  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,4%**, ceteris paribus
-  + wraz ze wzrostem protime o 1, hazard (ryzyko) zgonu rośnie o **38,0%**, ceteris paribus
+  + jeżeli wiek wzrośnie o rok, hazard (ryzyko zgonu pod warunkiem, że jednostka dożyje do danego momentu) rośnie o **3,3%**, ceteris paribus,
+  + pacjenci z obecnością hepatomegalii (powiększonej wątroby) mają hazard o **66,2%** wyższy niż pacjenci z hepato = 0, ceteris paribus,
+  + wraz ze wzrostem bili o 1, hazard rośnie o **8,9%**, ceteris paribus,
+  + wraz ze wzrostem albumin o 1, hazard maleje o **67%**, ceteris paribus,
+  + wraz ze wzrostem copper o 1, hazard rośnie o **0,3%**, ceteris paribus,
+  + wraz ze wzrostem ast o 1, hazard rośnie o **0,4%**, ceteris paribus,
+  + wraz ze wzrostem protime o 1, hazard rośnie o **38,0%**, ceteris paribus.
   
 ```{r}  
 Cox1 <- coxph(Surv(time,cens)~age+hepato+bili+albumin+copper+ast+protime, data = daneKNN)
@@ -1102,11 +1107,11 @@ plot(Prop)
 ### **Estymacja modelu z wykorzystaniem zmiennych istotnych statystycznie oraz spełniających założenie o proporcjonalności**
 
 * INTERPRETACJA PARAMETROW: 
-  + jeżeli wiek wzrośnie o rok, hazard (ryzyko) zgonu rośnie o **3,4%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus (przy pozostałych wartościach zmiennych takich samych), ceteris paribus
-  + pacjenci z obecnościa hepatomegalii lub powiększenia wątroby (hepato1) mają hazard (ryzyko) zgonu o **102%** wyższy niz pacjenci z hepato = 0, ceteris paribus
-  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **70%**, ceteris paribus
-  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rośnie o **0,5%**, ceteris paribus
-  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,5%**, ceteris paribus
+  + jeżeli wiek wzrośnie o rok, hazard (ryzyko zgonu pod warunkiem, że jednostka dożyje do danego momentu) rośnie o **3,4%**, ceteris paribus,
+  + pacjenci z obecnością hepatomegalii (powiększonej wątroby) mają hazard o **102%** wyższy niz pacjenci z hepato = 0, ceteris paribus,
+  + wraz ze wzrostem albumin o 1, hazard maleje o **70%**, ceteris paribus,
+  + wraz ze wzrostem copper o 1, hazard rośnie o **0,5%**, ceteris paribus,
+  + wraz ze wzrostem ast o 1, hazard rośnie o **0,5%**, ceteris paribus.
 
 ```{r}  
 Cox2 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN)
@@ -1116,7 +1121,7 @@ summary(Cox2)
 ### **Graficzna weryfikacja założenia proporcjonalności**
 
 **Metoda skalowanych reszt Schoenfelda**
-Ocenę tego, czy założenie proporcjonalności jest spełnione dokonuje się wzrokowo, sprawdzając czy punkty na wykresie układają się wzdłuż linii poziomej. Wyraźna obserwowana tendencja w przebiegu tej krzywej, sugeruje brak proporcjonalności zmiennej.
+Ocenę tego, czy założenie proporcjonalności jest spełnione dokonuje się wzrokowo poprzez sprawdzenie czy punkty na wykresie układają się wzdłuż linii poziomej. Wyraźna zaobserwowana tendencja w przebiegu tej krzywej może sugerować brak proporcjonalności zmiennej.
 
 Ocena na podstawie wykresy wydaje się być problematyczna, ale można zauważyć, że zmienne bill i protime nie spełniają założeń proporcjonalności.
 
@@ -1138,7 +1143,7 @@ for (i in 1:7) {
 Ważnym aspektem ewaluacji modeli Coxa jest badanie jednostek odstających, tj. tych które:
   
   * mają nietypową konfigurację zmiennych objaśniających,
-  * wywierają niepożądany wpływ na oszacowania parametrów
+  * wywierają niepożądany wpływ na oszacowania parametrów,
   * mają niepożądany wpływ na dopasowanie modelu [Hosmer i inni 2008].
 
 Są to punkty na wykresach oddalone od pozostałych. Jednostki o nietypowej konfiguracji zmiennych objaśniających. Mogą w nieproporcjonalny sposób wpływać na oszacowania parametrów strukturalnych modelu. Do identyifikacji wartości nietypowych wykorzystuje się reszty odchyleń. Za wartości nietypowe można uznać te jednostki, dla których reszty odchyleń przyjmują wartości +- 3 lub więcej.
@@ -1178,11 +1183,11 @@ daneKNN_1 <- daneKNN[-c,] #zredukowany zbior
 ### **Oszacowanie modelu na zredukowanej bazie danych**
 
 * INTERPRETACJA PARAMETROW: 
-  + jeżeli wiek wzrośnie o 1 rok, hazard (ryzyko) zgonu rośnie o **4,9%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus 
-  + pacjenci z obecnością hepatomegalii lub powiększenia wątroby(hepato1) mają hazard (ryzyko) zgonu o **100,5%** wyższy niż pacjenci z hepato = 0 ceteris paribus
-  + wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **76%**
-  + wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rośnie o **0,6%** ceteris paribus
-  + wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,8%** ceteris paribus
+  + jeżeli wiek wzrośnie o 1 rok, hazard (ryzyko zgonu pod warunkiem, że jednostka dożyje do danego momentu) rośnie o **4,9%**, ceteris paribus, 
+  + pacjenci z obecnością hepatomegalii (powiększonej wątroby) mają hazard o **100,5%** wyższy niż pacjenci z hepato = 0, ceteris paribus,
+  + wraz ze wzrostem albumin o 1, hazard maleje o **76%**, ceteris paribus,
+  + wraz ze wzrostem copper o 1, hazard rośnie o **0,6%**, ceteris paribus,
+  + wraz ze wzrostem ast o 1, hazard rośnie o **0,8%**, ceteris paribus.
 
 ```{r}
 Cox3 <- coxph(Surv(time,cens)~age+hepato+albumin+copper+ast, data = daneKNN_1)
@@ -1190,7 +1195,7 @@ summary(Cox3)
 ```
 
 ### **METODA RESZT MARTYNGALOWYCH - badamy czy wystepuje liniowosc**
-Jeżeli zmienna objaśniająca 𝑋 jest ilościowa, to wprowadzenie jej do modelu Coxa jest równoważne przyjęciu założenia, że łączy ją związek liniowy z logarytmem hazardu. Jedna z najcześciej spotykanych metod graficznych jest metoda reszt martyngalowych. Polega na wyznaczeniu reszt martyngałowych dla modelu bez zmiennych objaśniających i zestawieniu ich z badaną zmienną objaśniającą na wykresie korelacyjnym
+Jeżeli zmienna objaśniająca 𝑋 jest ilościowa, to wprowadzenie jej do modelu Coxa jest równoważne przyjęciu założenia, że łączy ją związek liniowy z logarytmem hazardu. Jedna z najcześciej spotykanych metod graficznych jest metoda reszt martyngałowych. Polega na wyznaczeniu reszt martyngałowych dla modelu bez zmiennych objaśniających i zestawieniu ich z badaną zmienną objaśniającą na wykresie korelacyjnym.
 
 ### **Reszty martyngałowe dla zmiennej age**
 
@@ -1297,11 +1302,11 @@ A4
 
 Mimo wszystko najlepszym modelem jest model bez transformacji zmiennej copper. Interpretacja parametrów w tym modelu przedstawia się w następujący sposób:
 
-* jezeli wiek wzrosnie o 1 rok, hazard (ryzyko) zgonu rośnie o **5,0%** u osób bez hepatomegalii lub powiększenia wątroby, ceteris paribus 
-* pacjenci z obecnościa hepatomegalii lub powiększenia wątroby(hepato1) mają hazard (ryzyko) zgonu o **100,5%** wyzszy niz pacjenci z hepato = 0 ceteris paribus
-* wraz ze wzrostem albumin o 1, hazard (ryzyko) zgonu maleje o **76%**, ceteris paribus
-* wraz ze wzrostem copper o 1, hazard (ryzyko) zgonu rośnie o **0,6%** ceteris paribus
-* wraz ze wzrostem ast o 1, hazard (ryzyko) zgonu rośnie o **0,8%** ceteris paribus
+* jezeli wiek wzrosnie o 1 rok, hazard (ryzyko zgonu pod warunkiem, że jednostka dożyje do danego momentu) rośnie o **5,0%**, ceteris paribus, 
+* pacjenci z obecnością hepatomegalii (powiększonej wątroby) mają hazard o **100,5%** wyższy niz pacjenci z hepato = 0, ceteris paribus,
+* wraz ze wzrostem albumin o 1, hazard maleje o **76%**, ceteris paribus,
+* wraz ze wzrostem copper o 1, hazard rośnie o **0,6%**, ceteris paribus,
+* wraz ze wzrostem ast o 1, hazard rośnie o **0,8%**, ceteris paribus.
 
 ```{r}
 rbind(A1,A2,A3,A4)
@@ -1311,7 +1316,7 @@ summary(Cox3)
 
 ### **Miary dopasowania**
 
-Porównując miary dopasowania, najlepszy okazał się model z istotnymi zmiennymi oraz model po usunięciu jednostek wpływowych. Miara tych modeli jest taka sama. Niższą wartość przyjętej miary posiada model ze zmiennymi, które potwierdzały założenie o proporcjonalności hazardu i został oszacowany na wszystkich 312 jednostkach.
+Poniżej ukazano miary dopasowania R2, (obliczone na podstawie statystyki cząstkowej ilorazu wiarygodności w modelu Coxa) Najlepiej dopasowanym modelem (o największej wartości tej miary = **0,77**) jest model Cox3 otrzymany metodą krokową, po odrzuceniu zmiennych niespełniajacych założeń proporcjonalnosci oraz jednostek odstających i wpływowych. Co ciekawe, taką samą wartość miary R2 (**0,77**) obliczono dla modelu Cox1 otrzymanego metodą krokową przed sprawdzeniem zalożeń proporcjonalnosci oraz przed odrzuceniem jednostek odstających i wpływowych
 ```{r}
 r2_1 <- coxr2(Cox1) #model otrzymany metoda krokowa przed sprawdzeniem zalozen proporcjonalnosci
 r2_2 <- coxr2(Cox2) #model po odrzuceniu zmiennych niespelniajacych zalozen proporcjonalnosci
